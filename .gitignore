@@ -1,0 +1,6 @@
+data
+data/*
+node_modules
+node_modules/*
+cookies.json
+scr.png

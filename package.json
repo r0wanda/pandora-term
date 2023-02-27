@@ -1,0 +1,30 @@
+{
+  "name": "pandora-term",
+  "version": "1.0.0",
+  "description": "Pandora TUI (ive lost count of how many tries this has taken)",
+  "main": "index.mjs",
+  "scripts": {
+    "test": "node ."
+  },
+  "author": "ron",
+  "license": "GPL-3.0-or-later",
+  "dependencies": {
+    "blessed": "^0.1.81",
+    "chalk": "^5.2.0",
+    "entities": "^4.4.0",
+    "figlet": "^1.5.2",
+    "gkm": "^0.2.0",
+    "invert-color": "^2.0.0",
+    "puppeteer-extra": "^3.3.4",
+    "puppeteer-extra-plugin-adblocker": "^2.13.5",
+    "puppeteer-extra-plugin-session": "^1.0.1",
+    "puppeteer-extra-plugin-stealth": "^2.11.1",
+    "rgb2hex": "^0.2.5",
+    "screen-size-detector": "^1.0.4",
+    "xvfb": "^0.4.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.34.0",
+    "xo": "^0.53.1"
+  }
+}
