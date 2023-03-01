@@ -40,7 +40,7 @@ class Keybind {
 				default:
 			}
 		});
-		this.int = setInterval(handler, 10, pressed, S);
+		this.int = setInterval(handler, 50, pressed);
 	}
 
 	/**

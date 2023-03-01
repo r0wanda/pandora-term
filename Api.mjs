@@ -47,22 +47,18 @@ class Api extends Keybind {
      * @param {Array<string>} pressed 
      * @returns {Promise<void>}
      */
-	async keyHandler(pressed, S) {
+	async keyHandler(pressed) {
 		// Play/Pause
-		let playPressed = true;
+		let playPressed = false;
 		for (const key of this.config.keybinds.play_pause) {
-			if (!pressed.includes(key)) {
-				playPressed = false;
-				this.keybinds.playPause = false;
-			}
+			if (pressed.includes(key)) playPressed = true;
+			else this.keybinds.playPause = false;
 		}
 
-		for (const key of this.config.keybinds.play_pause_exclude) {
-			playPressed = !pressed.includes(key);
-		}
+		for (const key of this.config.keybinds.play_pause_exclude) playPressed = pressed.includes(key) ? false : playPressed;
 
-		if (playPressed) {
-			await this.playPause(S);
+		if (playPressed && !this.keybinds.playPause) {
+			await this.playPause();
 			this.keybinds.playPause = true;
 		}
 	}
@@ -169,7 +165,6 @@ class Api extends Keybind {
 		console.log(await this.page.cookies());
 		await this.page.screenshot({path: this.config.screenshot_path});
 		await this.page.waitForNetworkIdle();
-		console.log(S.AVATAR);
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
@@ -279,6 +274,7 @@ class Api extends Keybind {
      */
 	async playPause() {
         try {
+			console.error('playpausing')
 			if (
 				this.page.isClosed() ||
 		    	this.keybinds.playPause ||
@@ -308,109 +304,116 @@ class Api extends Keybind {
      * @returns {Promise<Collection>}
      */
 	async collection() {
-		if (!this.page.$(S.MYMUSIC.INFINITEGRID)) {
-			return null;
-		}
+		try {
+			if (!this.page.$(S.MYMUSIC.INFINITEGRID)) {
+				return null;
+			}
 
-		const grid = await this.page.evaluate(S => {
-			function cssPath(element) {
-				if (!(element instanceof Element)) {
-					return;
-				}
+			await (await this.page.$(S.MYMUSIC.COLLECTION)).click();
 
-				const path = [];
-				while (element.nodeType === Node.ELEMENT_NODE) {
-					let selector = element.nodeName.toLowerCase();
-					if (element.id) {
-						selector += '#' + element.id;
-						path.unshift(selector);
-						break;
-					} else {
-						let sib = element; let
-							nth = 1;
-						while (sib = sib.previousElementSibling) {
-							if (sib.nodeName.toLowerCase() == selector) {
-								nth++;
+			await this.page.waitForSelector(S.MYMUSIC.INFINITEGRID, {
+				timeout: this.config.collection_timeout
+			});
+
+			const grid = await this.page.evaluate(S => {
+				function cssPath(element) {
+					if (!(element instanceof Element)) {
+						return;
+					}
+
+					const path = [];
+					while (element.nodeType === Node.ELEMENT_NODE) {
+						let selector = element.nodeName.toLowerCase();
+						if (element.id) {
+							selector += '#' + element.id;
+							path.unshift(selector);
+							break;
+						} else {
+							let sib = element;
+							let	nth = 1;
+							while (sib = sib.previousElementSibling) {
+								if (sib.nodeName.toLowerCase() == selector) {
+									nth++;
+								}
+							}
+
+							if (element.previousElementSibling != null || element.nextElementSibling != null) {
+								selector += ':nth-of-type(' + nth + ')';
 							}
 						}
 
-						if (element.previousElementSibling != null || element.nextElementSibling != null) {
-							selector += ':nth-of-type(' + nth + ')';
+						path.unshift(selector);
+						element = element.parentNode;
+					}
+					return path.join(' > ');
+				} // From: https://stackoverflow.com/a/12222317
+
+				const collection = [];
+				const infiniteGrid = document.querySelector(S.MYMUSIC.INFINITEGRID);
+				//throw new Error(cssPath(infiniteGrid.innerHTML));
+				for (const child of infiniteGrid.children) {
+					const res = {
+						img: S.PLACEHOLDER,
+						first: {
+							elem: '',
+							link: true,
+							content: '',
+						},
+						second: {
+							elem: '',
+							link: false,
+							content: '',
+						},
+						third: {
+							exists: false,
+							elem: '',
+							link: false,
+							content: '',
+							explicit: false,
+							clean: false,
 						}
 					}
-
-					path.unshift(selector);
-					element = element.parentNode;
-				}
-
-				return path.join(' > ');
-			}
-
-			const collection = [];
-			const infiniteGrid = document.querySelector(S.MYMUSIC.INFINITEGRID);
-			for (const child of infiniteGrid.children) {
-				const res = {
-					img: S.PLACEHOLDER,
-					first: {
-						elem: '',
-						link: true,
-						content: '',
-					},
-					second: {
-						elem: '',
-						link: false,
-						content: '',
-					},
-					third: {
-						exists: false,
-						elem: '',
-						link: false,
-						content: '',
-						explicit: false,
-						clean: false,
-					},
-				};
-				res.img = child.querySelector(S.MYMUSIC.ITEM_THUMBNAIL).src;
-				const first = child.querySelector(S.MYMUSIC.ITEM_FIRST);
-				res.first.elem = cssPath(first);
-				res.first.content = first.innerText;
-				const second = child.querySelector(S.MYMUSIC.ITEM_SECOND);
-				const secondLink = second.querySelector('a');
-				if (secondLink) {
-					res.second.link = true;
-					res.second.content = secondLink.innerText;
-					res.second.elem = cssPath(secondLink);
-				} else {
-					res.second.content = second.childNodes[0].nodeValue;
-					res.second.elem = cssPath(second);
-				}
-
-				const third = child.querySelector(S.MYMUSIC.ITEM_THIRD);
-				if (third) {
-					res.third.exists = true;
-    				const third_txt = third.querySelector(S.MYMUSIC.ITEM_THIRD_TXT);
-    				const third_e = third.querySelector(S.MYMUSIC.ITEM_THIRD_E);
-    				res.third.elem = cssPath(third);
-    				res.third.content = third_txt.innerText;
-    				if (third_e) {
-						switch (third_e.innerText.toLowerCase()) {
-    				case 'e': {
-    					res.third.explicit = true;
-    					break;
-    				}
-
-    				case 'clean': {
-    					res.third.clean = true;
-    					break;
-    				}
-    				}
+					res.img = child.querySelector(S.MYMUSIC.ITEM_THUMBNAIL).src;
+					const first = child.querySelector(S.MYMUSIC.ITEM_FIRST);
+					res.first.elem = cssPath(first);
+					res.first.content = first.innerText;
+					const second = child.querySelector(S.MYMUSIC.ITEM_SECOND);
+					const secondLink = second.querySelector('a');
+					if (secondLink) {
+						res.second.link = true;
+						res.second.content = secondLink.innerText;
+						res.second.elem = cssPath(secondLink);
+					} else {
+						res.second.content = second.childNodes[0].nodeValue;
+						res.second.elem = cssPath(second);
 					}
-				}
 
-    			collection.push(res);
-			}
-		}, S);
-		return grid;
+					const third = child.querySelector(S.MYMUSIC.ITEM_THIRD);
+					if (third) {
+						res.third.exists = true;
+    					const third_txt = third.querySelector(S.MYMUSIC.ITEM_THIRD_TXT);
+    					const third_e = third.querySelector(S.MYMUSIC.ITEM_THIRD_E);
+    					res.third.elem = cssPath(third);
+    					res.third.content = third_txt.innerText;
+	    				if (third_e) {
+							switch (third_e.innerText.toLowerCase()) {
+    						case 'e':
+    							res.third.explicit = true;
+    							break;
+    						case 'clean':
+    							res.third.clean = true;
+    							break;
+    						}
+    					}
+					}
+					collection.push(res);
+				}
+			}, S);
+			console.error(JSON.stringify(grid));
+			return grid;
+		} catch (err) {
+			console.error(err);
+		}
 	}
 }
 

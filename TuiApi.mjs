@@ -88,7 +88,8 @@ class TuiApi extends Api {
 			await this.close();
 		});
 		this.scr.key(['space'], async () => {
-			await this.playPause(S);
+			console.error('playpausing from blessed')
+			await this.playPause();
 		});
 		this.scr.key(['r'], async () => {
 			console.error(await this.collection());
