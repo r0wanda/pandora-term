@@ -1,11 +1,13 @@
 import bl from 'blessed';
 import Api from './Api.mjs'
+import * as S from './selectors.mjs';
 
 class TuiApi extends Api {
 	// Vars
 	scr;
 	loops;
 	boxes;
+	S;
 
 	constructor() {
 		super();
@@ -16,6 +18,7 @@ class TuiApi extends Api {
 			song: null,
 			duration: null,
 		};
+		this.S = S;
 	}
 
 	async close() {
@@ -85,7 +88,7 @@ class TuiApi extends Api {
 			await this.close();
 		});
 		this.scr.key(['space'], async () => {
-			await this.playPause();
+			await this.playPause(S);
 		});
 		this.scr.key(['r'], async () => {
 			console.error(await this.collection());

@@ -47,8 +47,7 @@ class Api extends Keybind {
      * @param {Array<string>} pressed 
      * @returns {Promise<void>}
      */
-	async keyHandler(pressed) {
-		if (!this.loaded) return;
+	async keyHandler(pressed, S) {
 		// Play/Pause
 		let playPressed = true;
 		for (const key of this.config.keybinds.play_pause) {
@@ -63,7 +62,7 @@ class Api extends Keybind {
 		}
 
 		if (playPressed) {
-			await this.playPause();
+			await this.playPause(S);
 			this.keybinds.playPause = true;
 		}
 	}
@@ -121,8 +120,6 @@ class Api extends Keybind {
      * @returns {Promise<void>}
      */
 	async init() {
-		await super.init(this.keyHandler.bind(this));
-
 		// Login
 		this.browse = await pptr.launch({
 			headless: false,
@@ -172,11 +169,12 @@ class Api extends Keybind {
 		console.log(await this.page.cookies());
 		await this.page.screenshot({path: this.config.screenshot_path});
 		await this.page.waitForNetworkIdle();
+		console.log(S.AVATAR);
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
-
 		await this.autoAccept(this.page);
+		await super.init(this.keyHandler.bind(this));
 		console.log(ch.green('Login successful'));
 		this.loaded = true;
 	}
@@ -189,7 +187,9 @@ class Api extends Keybind {
 	async getSong() {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.TITLE));
-		} catch {
+		} catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getSong'));
+			else console.error(err);
 			return null;
 		}
 	}
@@ -201,7 +201,9 @@ class Api extends Keybind {
 	async getArtist() {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.ARTIST));
-		} catch {
+		} catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getArtist'));
+			else console.error(err);
 			return null;
 		}
 	}
@@ -216,7 +218,9 @@ class Api extends Keybind {
 			const remaining = await this.query2html(S.SONG.REMAINING);
 			const template = `${elapsed} | ${remaining} `;
 			return template;
-		} catch {
+		} catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getDuration'));
+			else console.error(err);
 			return null;
 		}
 	}
@@ -231,22 +235,31 @@ class Api extends Keybind {
      * @returns {Promise<Colors>}
      */
 	async getColors() {
-		const bgColor = await this.page.$eval(S.SONG.BAR, e => e.style.backgroundColor);
-		if (!bgColor) {
+		try {
+			const bgColor = await this.page.$eval(S.SONG.BAR, e => e.style.backgroundColor);
+			if (!bgColor) {
+				return {
+					bg: 'white',
+					fg: 'black',
+				};
+			}
+
+			const bg = rgb2hex(
+				bgColor,
+			).hex;
+			const fg = invert(bg, true);
+			return {
+				bg,
+				fg,
+			};
+		} catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getColors'));
+			else console.error(err);
 			return {
 				bg: 'white',
 				fg: 'black',
 			};
 		}
-
-		const bg = rgb2hex(
-			bgColor,
-		).hex;
-		const fg = invert(bg, true);
-		return {
-			bg,
-			fg,
-		};
 	}
 
 	// Helpers
@@ -265,13 +278,19 @@ class Api extends Keybind {
      * @returns {Promise<void>}
      */
 	async playPause() {
-		if (this.keybinds.playPause) {
-			return;
-		}
-
-		await this.page.evaluate(S => {
-			(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
-		}, S);
+        try {
+			if (
+				this.page.isClosed() ||
+		    	this.keybinds.playPause ||
+				(!await this.page.$(S.SONG.PLAY) && !this.page.$(S.SONG.PAUSE))
+			) return;
+		    await this.page.evaluate(S => {
+		    	(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
+		    }, S);
+        } catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getColors'));
+			else console.error(err);
+        }
 	}
 
     /**

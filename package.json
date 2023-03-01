@@ -4,7 +4,8 @@
   "description": "Pandora TUI (ive lost count of how many tries this has taken)",
   "main": "index.mjs",
   "scripts": {
-    "test": "node ."
+    "test": "node . 2> errfile",
+    "start": "node . 2> errfile"
   },
   "author": "ron",
   "license": "GPL-3.0-or-later",

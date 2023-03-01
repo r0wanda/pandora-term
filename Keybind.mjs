@@ -1,4 +1,5 @@
 import gkm from 'gkm';
+import * as S from './selectors.mjs';
 
 /*
  * Keybind
@@ -39,7 +40,7 @@ class Keybind {
 				default:
 			}
 		});
-		this.int = setInterval(handler, 10, pressed);
+		this.int = setInterval(handler, 10, pressed, S);
 	}
 
 	/**
