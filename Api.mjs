@@ -1,8 +1,6 @@
-import {readFileSync as rf, writeFileSync as wf, existsSync as ex} from 'node:fs';
-import url from 'node:url';
-import path from 'node:path';
 import ch from 'chalk';
 import Xvfb from 'xvfb';
+import path from 'node:path';
 import rgb2hex from 'rgb2hex';
 import invert from 'invert-color';
 import { decodeHTML } from 'entities';
@@ -11,7 +9,8 @@ import adblockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import _pptr from 'puppeteer';
 import pptr from 'puppeteer-extra';
 import * as S from './selectors.mjs';
-import Keybind from './Keybind.mjs';
+import sleep from './sleep.mjs';
+import HTTP from './HTTP.mjs';
 
 pptr.use(stealthPlugin());
 const adblocker = adblockerPlugin({
@@ -19,12 +18,11 @@ const adblocker = adblockerPlugin({
 });
 pptr.use(adblocker);
 
-class Api extends Keybind {
+class Api extends HTTP {
 	// Vars
 	browse;
 	page;
 	udd;
-	dirname;
 	xvfb;
 	keybinds;
 	loaded;
@@ -34,10 +32,8 @@ class Api extends Keybind {
 		this.keybinds = {
 			playPause: false,
 		};
-		this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
 		this.udd = path.join(this.dirname, 'data');
 		this.xvfb = new Xvfb(S.XVFB_OPTS);
-		this.config = JSON.parse(rf('config.json'));
 		this.loaded = false;
 		this.executablePath = _pptr.executablePath();
 	}
@@ -89,12 +85,10 @@ class Api extends Keybind {
 	async autoAccept(page, violation = true) {
 		if (this.config.autoAccept.cookies) {
 			await page.evaluate(S => {
-				document.addEventListener('load', () => {
+				setInterval(() => {
 					const cookieBtn = document.querySelector(S.COOKIES);
-					if (cookieBtn) {
-						cookieBtn.click();
-					}
-				});
+					if (cookieBtn) cookieBtn.click();
+				}, 1000);
 			}, S);
 		}
 
@@ -102,10 +96,8 @@ class Api extends Keybind {
 			await page.evaluate(S => {
 				setInterval(() => {
 					const violation = document.querySelector(S.VIOLATION);
-					if (violation) {
-						violation.click();
-					}
-				}, 1000);
+					if (violation) violation.click();
+				}, 250);
 			}, S);
 		}
 	}
@@ -126,7 +118,7 @@ class Api extends Keybind {
 		});
 		console.log(ch.blue('Browser started, logging in...'));
 		const [page] = await this.browse.pages();
-		await this.autoAccept(page, false);
+		await this.autoAccept(page);
 		await page.waitForSelector(S.AVATAR, {
 			visible: true,
 			timeout: 0,
@@ -134,7 +126,7 @@ class Api extends Keybind {
 		await page.waitForNetworkIdle();
 		await page.evaluate(() => {
 			setTimeout(() => {
-				alert('Saving, do not click anything and do not close this window');
+				alert('Saving, click ok and do not close this window');
 			}, 1);
 		});
 		await page.waitForTimeout(this.config.timeout);
@@ -160,11 +152,13 @@ class Api extends Keybind {
 		});
 		console.log(ch.blue('Browser started with XVFB'));
 		this.page = (await this.browse.pages())[0];
-		// Await this.page.reload();
+		// await this.page.reload();
 		console.log(ch.blue('Collection loaded'));
 		console.log(await this.page.cookies());
+		await this.page.waitForNetworkIdle({
+			idleTime: 1000
+		});
 		await this.page.screenshot({path: this.config.screenshot_path});
-		await this.page.waitForNetworkIdle();
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
@@ -314,6 +308,9 @@ class Api extends Keybind {
 			await this.page.waitForSelector(S.MYMUSIC.INFINITEGRID, {
 				timeout: this.config.collection_timeout
 			});
+			await this.page.screenshot({
+				path: path.join(this.config.tmp, 'collection.png')
+			});
 
 			const grid = await this.page.evaluate(S => {
 				function cssPath(element) {
@@ -408,8 +405,8 @@ class Api extends Keybind {
 					}
 					collection.push(res);
 				}
+				return collection;
 			}, S);
-			console.error(JSON.stringify(grid));
 			return grid;
 		} catch (err) {
 			console.error(err);

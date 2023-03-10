@@ -1,5 +1,4 @@
 import gkm from 'gkm';
-import * as S from './selectors.mjs';
 
 /*
  * Keybind

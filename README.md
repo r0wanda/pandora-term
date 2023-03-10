@@ -30,3 +30,5 @@ A TUI interface for Pandora Radio
         yarn install
         ```
         This will install all required packages (~24MB)
+
+### Logfile at /tmp/p-term.log
