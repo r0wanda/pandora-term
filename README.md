@@ -1,4 +1,6 @@
 # Pandora Term
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcookey-dev%2Fpandora-term.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcookey-dev%2Fpandora-term?ref=badge_shield)
+
 A TUI interface for Pandora Radio
 
 ***Disclaimer: The creator of this program is not responsible for any things that may happen to your pandora account (eg. TOS violations i guess). There is no malicious code, you can read through it if you're sceptical***
@@ -32,3 +34,6 @@ A TUI interface for Pandora Radio
         This will install all required packages (~24MB)
 
 ### Logfile at /tmp/p-term.log
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fcookey-dev%2Fpandora-term.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fcookey-dev%2Fpandora-term?ref=badge_large)
