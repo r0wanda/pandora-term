@@ -18,7 +18,8 @@ class TuiApi extends Api {
 		this.boxes = {
 			song: null,
 			duration: null,
-			collection: null
+			collection: null,
+			collectionItems: []
 		};
 		this.S = S;
 	}
@@ -101,14 +102,20 @@ class TuiApi extends Api {
 		await this.drawCollection();
 	}
 
+	// Draw functions (exlcuding loops)
 	async drawCollection() {
+		await this.fetchCollection();
+		this.boxes.collection = bl.box()
+	}
+
+	// Helpers
+	async fetchCollection() {
 		const _mymusic = await this.collection();
 		for (var i = 0; i < _mymusic.length; i++) {
 			_mymusic[i].img = await this.fetch(_mymusic[i].img);
 		}
 		this.mymusic = _mymusic;
 		console.error(this.mymusic);
-		//this.boxes.collection = bl.box()
 	}
 }
 

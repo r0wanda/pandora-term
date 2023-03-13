@@ -4,14 +4,15 @@
   "description": "Pandora TUI (attempt 6 i guess)",
   "main": "index.mjs",
   "scripts": {
-    "test": "node .",
-    "start": "node ."
+    "test": "node . 2> errfile",
+    "start": "node . 2> /tmp/p-term.log"
   },
   "author": "ron",
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "blessed": "^0.1.81",
     "chalk": "^5.2.0",
+    "discord-rpc": "^4.0.1",
     "entities": "^4.4.0",
     "figlet": "^1.5.2",
     "file-type": "^18.2.1",

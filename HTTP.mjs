@@ -6,15 +6,15 @@ import path from 'node:path';
 import { randomBytes as rb } from 'node:crypto';
 import { fileTypeFromBuffer as ftfb } from 'file-type';
 import { writeFileSync as wf, readFileSync as rf, existsSync as ex, rmSync as rm } from 'node:fs';
-import Keybind from './Keybind.mjs';
+import RPC from './RPC.mjs';
 
-class HTTP extends Keybind {
+class HTTP extends RPC {
     config;
     files;
     dirname;
 
     constructor() {
-        super();
+        super(RPC.getAppID());
         this.files = [];
         this.config = JSON.parse(rf('config.json'));
         this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
@@ -22,6 +22,7 @@ class HTTP extends Keybind {
 
     async init(handler) {
         await super.init(handler);
+        this.updateRPC('morbius', 'ඞ')
     }
 
     #exRm(path) {
