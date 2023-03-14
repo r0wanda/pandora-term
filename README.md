@@ -25,10 +25,10 @@ A TUI interface for Pandora Radio
 * Node.js
     - Install nvm (optional) ([Link](https://github.com/nvm-sh/nvm#installing-and-updating))
     - Install yarn ([Link](https://yarnpkg.com/getting-started/install))
-    - Install deps
-        ```sh
-        yarn install
-        ```
-        This will install all required packages (~24MB)
+## Run the install check
+Run in pandora-term folder
+```sh
+sh install.sh
+```
 
 ### Logfile at /tmp/p-term.log
