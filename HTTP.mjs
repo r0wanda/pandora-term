@@ -1,7 +1,6 @@
 import got from 'got';
 import ch from 'chalk';
 import jimp from 'jimp';
-import url from 'node:url';
 import path from 'node:path';
 import { randomBytes as rb } from 'node:crypto';
 import { fileTypeFromBuffer as ftfb } from 'file-type';
@@ -11,13 +10,11 @@ import RPC from './RPC.mjs';
 class HTTP extends RPC {
     config;
     files;
-    dirname;
 
     constructor() {
         super(RPC.getAppID());
         this.files = [];
         this.config = JSON.parse(rf('config.json'));
-        this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
     }
 
     async init(handler) {

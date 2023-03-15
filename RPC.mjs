@@ -1,47 +1,45 @@
-import drpc from 'discord-rpc';
+import url from 'node:url';
+import path from 'node:path';
+import { PythonShell } from 'python-shell';
 import Keybind from './Keybind.mjs';
 
 class RPC extends Keybind {
-    rpc;
     appID;
     scopes;
-    constructor(appid, scopes = ['rpc', 'rpc.activities.write']) {
+    py;
+    dirname;
+    constructor(appid) {
         super();
+        this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
         this.appID = appid;
-        this.scopes = scopes;
     }
 
     async init(handler) {
-        this.rpc = new drpc.Client({
-            transport: 'ipc'
-        });
-        await new Promise(r => {
-            this.rpc.on('ready', r);
-            this.rpc.login({
-                clientId: this.appID,
-                scopes: this.scopes
-            });
-        });
-        console.error(`RPC Name: ${this.getRPCName()}\nRPC User: ${this.getRPCUser()}`);
         await super.init(handler);
     }
 
-    getRPCName() {
-        return this.rpc.application.name;
-    }
-    getRPCUser() {
-        return this.rpc.user.username;
+    async initRPC() {
+        this.py = new PythonShell(path.join(this.dirname, 'python/RPC.py'));
+        console.error('RPC: Python started');
+        await this.#waitForMsg('ready');
+        console.error('RPC: Python ready');
+        this.py.send(this.appID);
+        this.#waitForMsg('rpcconn');
+        console.error('RPC: Connected');
     }
 
-    updateRPC(state, details) {
-        this.rpc.setActivity({
-            state: state,
-            details: details,
-            startTimestamp: new Date(),
-            largeImageKey: 'logo',
-            smallImageKey: 'logo',
-            instance: false
-        });
+    #waitForMsg(msg) {
+        return new Promise(function(r, j) {
+            this.py.on('message', m => {
+                console.error(m);
+                if (m === msg) r();
+            });
+        }.bind(this))
+    }
+
+    async updateRPC(state, details, startAt = new Date(), endAt = new Date()) {
+        this.py.send(`set ${state} ${details}`);
+        this.#waitForMsg('done');
     }
 
     static getAppID() {
