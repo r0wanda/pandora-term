@@ -8,7 +8,9 @@ export const SONG = {
 	REMAINING: 'span[data-qa="remaining_time"]',
 	BAR: 'nav[data-qa="tuner_bar"]',
 	PLAY: 'button[data-qa="play_button"]',
-	PAUSE: 'button[data-qa="pause_button"]'
+	PAUSE: 'button[data-qa="pause_button"]',
+	SKIP: 'button[data-qa="t3_skip_forward_button"]',
+	REWIND: 'button[data-qa="t3_skip_back_button"]'
 }
 export const MYMUSIC = {
 	COLLECTION: 'a[data-qa="header_my_stations_link"]',
@@ -28,6 +30,10 @@ export const XVFB_OPTS = {
 	displayNum: 99,
 	reuse: true,
 	xvfb_args: ['-ac'],
+}
+export const ICONS = {
+	PLAY: '▶',
+	PAUSE: '⏸'
 }
 
 export const ERRS = {

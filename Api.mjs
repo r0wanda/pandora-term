@@ -38,11 +38,11 @@ class Api extends HTTP {
 		this.executablePath = _pptr.executablePath();
 	}
 
-    /**
-     * The function that handles keystokes
-     * @param {Array<string>} pressed 
-     * @returns {Promise<void>}
-     */
+	/**
+	 * The function that handles keystokes
+	 * @param {Array<string>} pressed 
+	 * @returns {Promise<void>}
+	 */
 	async keyHandler(pressed) {
 		// Play/Pause
 		let playPressed = false;
@@ -59,10 +59,10 @@ class Api extends HTTP {
 		}
 	}
 
-    /**
-     * The close function that stops xvfb and closes the browser
-     * @returns {Promise<void>}
-     */
+	/**
+	 * The close function that stops xvfb and closes the browser
+	 * @returns {Promise<void>}
+	 */
 	async close() {
 		await super.close();
 		if (this.browse && this.browse.isConnected) {
@@ -76,12 +76,12 @@ class Api extends HTTP {
 		process.exit(0);
 	}
 
-    /**
-     * Autoaccept function (For cookies and violations)
-     * @param {Page} page 
-     * @param {boolean} violation 
-     * @returns {Promise<void>}
-     */
+	/**
+	 * Autoaccept function (For cookies and violations)
+	 * @param {Page} page 
+	 * @param {boolean} violation 
+	 * @returns {Promise<void>}
+	 */
 	async autoAccept(page, violation = true) {
 		if (this.config.autoAccept.cookies) {
 			await page.evaluate(S => {
@@ -103,10 +103,10 @@ class Api extends HTTP {
 	}
 
 	// Init functions
-    /**
-     * Init function
-     * @returns {Promise<void>}
-     */
+	/**
+	 * Init function
+	 * @returns {Promise<void>}
+	 */
 	async init() {
 		// Login
 		this.browse = await pptr.launch({
@@ -158,7 +158,7 @@ class Api extends HTTP {
 		await this.page.waitForNetworkIdle({
 			idleTime: 1000
 		});
-		await this.page.screenshot({path: this.config.screenshot_path});
+		await this.page.screenshot({ path: this.config.screenshot_path });
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
@@ -169,10 +169,10 @@ class Api extends HTTP {
 	}
 
 	// Getters
-    /**
-     * Song title getter
-     * @returns {Promise<string|null>}
-     */
+	/**
+	 * Song title getter
+	 * @returns {Promise<string|null>}
+	 */
 	async getSong() {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.TITLE));
@@ -183,10 +183,10 @@ class Api extends HTTP {
 		}
 	}
 
-    /**
-     * Song artist getter
-     * @returns {Promise<string|null>}
-     */
+	/**
+	 * Song artist getter
+	 * @returns {Promise<string|null>}
+	 */
 	async getArtist() {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.ARTIST));
@@ -197,10 +197,10 @@ class Api extends HTTP {
 		}
 	}
 
-    /**
-     * Song duration getter
-     * @returns {Promise<string|null>}
-     */
+	/**
+	 * Song duration getter
+	 * @returns {Promise<string|null>}
+	 */
 	async getDuration() {
 		try {
 			const elapsed = await this.query2html(S.SONG.ELAPSED);
@@ -214,15 +214,15 @@ class Api extends HTTP {
 		}
 	}
 
-    /**
-     * @typedef {Object} Colors
-     * @property {string} fg Foreground Color
-     * @property {string} bg Background Color
-     */
-    /**
-     * Song color getter
-     * @returns {Promise<Colors>}
-     */
+	/**
+	 * @typedef {Object} Colors
+	 * @property {string} fg Foreground Color
+	 * @property {string} bg Background Color
+	 */
+	/**
+	 * Song color getter
+	 * @returns {Promise<Colors>}
+	 */
 	async getColors() {
 		try {
 			const bgColor = await this.page.$eval(S.SONG.BAR, e => e.style.backgroundColor);
@@ -250,53 +250,66 @@ class Api extends HTTP {
 			};
 		}
 	}
+	/**
+	 * Get song play-pause state
+	 * @returns {Promise<boolean>} False for paused, True for play
+	 */
+	async getPlayPause() {
+		try {
+			return await this.page.$(S.SONG.PAUSE) ?? false;
+		} catch (err) {
+			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getPlayPause'));
+			else console.error(err);
+			return false;
+		}
+	}
 
-	// Helpers
-    /**
-     * Get property form CSS selector
-     * @param {string} element The CSS selector for the element
-     * @param {string} prop The property name to be requested
-     * @returns {Promise<string>}
-     */
+	// Other methods
+	/**
+	 * Get property form CSS selector
+	 * @param {string} element The CSS selector for the element
+	 * @param {string} prop The property name to be requested
+	 * @returns {Promise<string>}
+	 */
 	async query2html(element, prop = 'innerHTML') {
 		return await this.page.$eval(element, (e, p) => e[p], prop);
 	}
 
-    /**
-     * Play/Pause function
-     * @returns {Promise<void>}
-     */
+	/**
+	 * Play/Pause function
+	 * @returns {Promise<void>}
+	 */
 	async playPause() {
-        try {
+		try {
 			console.error('playpausing')
 			if (
 				this.page.isClosed() ||
-		    	this.keybinds.playPause ||
+				this.keybinds.playPause ||
 				(!await this.page.$(S.SONG.PLAY) && !this.page.$(S.SONG.PAUSE))
 			) return;
-		    await this.page.evaluate(S => {
-		    	(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
-		    }, S);
-        } catch (err) {
+			await this.page.evaluate(S => {
+				(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
+			}, S);
+		} catch (err) {
 			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getColors'));
 			else console.error(err);
-        }
+		}
 	}
 
-    /**
-     * @typedef {Object} CollectionItem
-     * @property {string} img The cover URL
-     * @property {Object} first The first item of metadata
-     * @property {Object} second The second item of metadata
-     * @property {Object} third The third item of metadata
-     */
-    /**
-     * @typedef {Array<CollectionItem>} Collection
-     */
-    /**
-     * Get collection
-     * @returns {Promise<Collection>}
-     */
+	/**
+	 * @typedef {Object} CollectionItem
+	 * @property {string} img The cover URL
+	 * @property {Object} first The first item of metadata
+	 * @property {Object} second The second item of metadata
+	 * @property {Object} third The third item of metadata
+	 */
+	/**
+	 * @typedef {Array<CollectionItem>} Collection
+	 */
+	/**
+	 * Get collection
+	 * @returns {Promise<Collection>}
+	 */
 	async collection() {
 		try {
 			if (!this.page.$(S.MYMUSIC.INFINITEGRID)) {
@@ -313,99 +326,103 @@ class Api extends HTTP {
 			});
 
 			const grid = await this.page.evaluate(S => {
-				function cssPath(element) {
-					if (!(element instanceof Element)) {
-						return;
-					}
+				try {
+					function cssPath(element) {
+						if (!(element instanceof Element)) {
+							return;
+						}
 
-					const path = [];
-					while (element.nodeType === Node.ELEMENT_NODE) {
-						let selector = element.nodeName.toLowerCase();
-						if (element.id) {
-							selector += '#' + element.id;
-							path.unshift(selector);
-							break;
-						} else {
-							let sib = element;
-							let	nth = 1;
-							while (sib = sib.previousElementSibling) {
-								if (sib.nodeName.toLowerCase() == selector) {
-									nth++;
+						const path = [];
+						while (element.nodeType === Node.ELEMENT_NODE) {
+							let selector = element.nodeName.toLowerCase();
+							if (element.id) {
+								selector += '#' + element.id;
+								path.unshift(selector);
+								break;
+							} else {
+								let sib = element;
+								let nth = 1;
+								while (sib = sib.previousElementSibling) {
+									if (sib.nodeName.toLowerCase() == selector) {
+										nth++;
+									}
+								}
+
+								if (element.previousElementSibling != null || element.nextElementSibling != null) {
+									selector += ':nth-of-type(' + nth + ')';
 								}
 							}
 
-							if (element.previousElementSibling != null || element.nextElementSibling != null) {
-								selector += ':nth-of-type(' + nth + ')';
+							path.unshift(selector);
+							element = element.parentNode;
+						}
+						return path.join(' > ');
+					} // From: https://stackoverflow.com/a/12222317
+
+					const collection = [];
+					const infiniteGrid = document.querySelector(S.MYMUSIC.INFINITEGRID);
+					//throw new Error(cssPath(infiniteGrid.innerHTML));
+					for (const child of infiniteGrid.children) {
+						const res = {
+							img: S.PLACEHOLDER,
+							first: {
+								elem: '',
+								link: true,
+								content: '',
+							},
+							second: {
+								elem: '',
+								link: false,
+								content: '',
+							},
+							third: {
+								exists: false,
+								elem: '',
+								link: false,
+								content: '',
+								explicit: false,
+								clean: false,
 							}
 						}
-
-						path.unshift(selector);
-						element = element.parentNode;
-					}
-					return path.join(' > ');
-				} // From: https://stackoverflow.com/a/12222317
-
-				const collection = [];
-				const infiniteGrid = document.querySelector(S.MYMUSIC.INFINITEGRID);
-				//throw new Error(cssPath(infiniteGrid.innerHTML));
-				for (const child of infiniteGrid.children) {
-					const res = {
-						img: S.PLACEHOLDER,
-						first: {
-							elem: '',
-							link: true,
-							content: '',
-						},
-						second: {
-							elem: '',
-							link: false,
-							content: '',
-						},
-						third: {
-							exists: false,
-							elem: '',
-							link: false,
-							content: '',
-							explicit: false,
-							clean: false,
+						res.img = child.querySelector(S.MYMUSIC.ITEM_THUMBNAIL).src;
+						const first = child.querySelector(S.MYMUSIC.ITEM_FIRST);
+						res.first.elem = cssPath(first);
+						res.first.content = first.innerText;
+						const second = child.querySelector(S.MYMUSIC.ITEM_SECOND);
+						const secondLink = second.querySelector('a');
+						if (secondLink) {
+							res.second.link = true;
+							res.second.content = secondLink.innerText;
+							res.second.elem = cssPath(secondLink);
+						} else {
+							res.second.content = second.childNodes[0].nodeValue;
+							res.second.elem = cssPath(second);
 						}
-					}
-					res.img = child.querySelector(S.MYMUSIC.ITEM_THUMBNAIL).src;
-					const first = child.querySelector(S.MYMUSIC.ITEM_FIRST);
-					res.first.elem = cssPath(first);
-					res.first.content = first.innerText;
-					const second = child.querySelector(S.MYMUSIC.ITEM_SECOND);
-					const secondLink = second.querySelector('a');
-					if (secondLink) {
-						res.second.link = true;
-						res.second.content = secondLink.innerText;
-						res.second.elem = cssPath(secondLink);
-					} else {
-						res.second.content = second.childNodes[0].nodeValue;
-						res.second.elem = cssPath(second);
-					}
 
-					const third = child.querySelector(S.MYMUSIC.ITEM_THIRD);
-					if (third) {
-						res.third.exists = true;
-    					const third_txt = third.querySelector(S.MYMUSIC.ITEM_THIRD_TXT);
-    					const third_e = third.querySelector(S.MYMUSIC.ITEM_THIRD_E);
-    					res.third.elem = cssPath(third);
-    					res.third.content = third_txt.innerText;
-	    				if (third_e) {
-							switch (third_e.innerText.toLowerCase()) {
-    						case 'e':
-    							res.third.explicit = true;
-    							break;
-    						case 'clean':
-    							res.third.clean = true;
-    							break;
-    						}
-    					}
+						const third = child.querySelector(S.MYMUSIC.ITEM_THIRD);
+						if (third) {
+							res.third.exists = true;
+							const third_txt = third.querySelector(S.MYMUSIC.ITEM_THIRD_TXT);
+							const third_e = third.querySelector(S.MYMUSIC.ITEM_THIRD_E);
+							res.third.elem = cssPath(third);
+							res.third.content = third_txt.innerText;
+							if (third_e) {
+								switch (third_e.innerText.toLowerCase()) {
+									case 'e':
+										res.third.explicit = true;
+										break;
+									case 'clean':
+										res.third.clean = true;
+										break;
+								}
+							}
+						}
+						collection.push(res);
 					}
-					collection.push(res);
+					return collection;
+				} catch {
+					return false;
 				}
-				return collection;
 			}, S);
 			return grid;
 		} catch (err) {

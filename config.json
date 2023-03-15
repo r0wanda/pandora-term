@@ -15,7 +15,7 @@
     "_screenshot_path_comment": "Changing this to /tmp/scr.png is ideal, but can also break things",
     "screenshot_path": "scr.png",
     "_timeout_comment": "Time to wait after login. 2000 is reccomended, add in increments of 1000 until the `Login failed` error stops. Increase when logging in to fix some problems",
-    "timeout": 7000,
+    "timeout": 4000,
     "_collection_timeout_comment": "Timeout for waiting for collection. 30000 (30 seconds) is default, you can change it to a larger value or to 0 for no timeout.",
     "collection_timeout": 30000,
     "_tmp_comment": "The temporary to save files, /tmp is reccomended",

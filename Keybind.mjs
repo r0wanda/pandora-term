@@ -17,7 +17,7 @@ class Keybind {
 	async init(handler) {
 		const pressed = [];
 
-		gkm.events.on('key.*', function (data) {
+		gkm.events.on('key.*', function (data) { // Responds to any keypress and any key-release
 			data = data[0];
 			switch (this.event) {
 				case 'key.pressed': {

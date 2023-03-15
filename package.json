@@ -16,6 +16,7 @@
     "entities": "^4.4.0",
     "figlet": "^1.5.2",
     "file-type": "^18.2.1",
+    "find-process": "^1.4.7",
     "gkm": "^0.2.0",
     "got": "^12.5.3",
     "invert-color": "^2.0.0",

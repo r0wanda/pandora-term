@@ -19,7 +19,6 @@ class HTTP extends RPC {
 
     async init(handler) {
         await super.init(handler);
-        this.updateRPC('morbius', 'ඞ')
     }
 
     #exRm(path) {
