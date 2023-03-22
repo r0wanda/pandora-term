@@ -7,6 +7,18 @@ export const SONG = {
 	ELAPSED: 'span[data-qa="elapsed_time"]',
 	REMAINING: 'span[data-qa="remaining_time"]',
 	BAR: 'nav[data-qa="tuner_bar"]',
+	BAR_HIT: 'a.Tuner__Audio__NowPlayingHitArea',
+	BAR_PAGE: {
+		ONDEMAND: {
+			BG: 'svg.BlurredBackground__svg > rect',
+			LEFT_COL: {
+				LEFT_COL: 'div.NowPlayingOnDemand__leftCol',
+				COLLECTED: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemLeftColumn > div.RowItemCollectedBadge',
+				TITLE: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemCenterColumn > div.RowItemCenterColumn__mainText > a',
+				ARTIST: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemCenterColumn > div.RowItemCenterColumn__secondText > a'
+			}
+		}
+	},
 	PLAY: 'button[data-qa="play_button"]',
 	PAUSE: 'button[data-qa="pause_button"]',
 	SKIP: 'button[data-qa="t3_skip_forward_button"]',

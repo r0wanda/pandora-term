@@ -1,6 +1,10 @@
 import bl from 'blessed';
+import invert from 'invert-color';
+import blc from 'blessed-contrib';
 import Api from './Api.mjs'
 import * as S from './selectors.mjs';
+
+// Graphic design is my passion
 
 class TuiApi extends Api {
 	// Vars
@@ -9,19 +13,25 @@ class TuiApi extends Api {
 	boxes;
 	S;
 	mymusic;
+	atSongPage;
 
 	constructor() {
 		super();
+		this.atSongPage = false;
 		this.loops = {
 			song: null
-		};
+		}
 		this.boxes = {
 			song: null,
+			songPage: null,
+			spc: {
+				lheader: null
+			},
 			duration: null,
 			collection: null,
 			play: null,
 			collectionItems: []
-		};
+		}
 		this.S = S;
 	}
 
@@ -52,16 +62,20 @@ class TuiApi extends Api {
 		this.boxes.duration.style.fg = colors.fg;
 		this.boxes.play.style.bg = colors.bg;
 		this.boxes.play.style.fg = colors.fg;
+		this.boxes.songPage.style.fg = colors.fg;
+		this.boxes.spc.lheader.style.fg = colors.fg;
+		this.boxes.spc.lheader.style.border.fg = colors.fg;
 		this.boxes.duration.left = `100%-${duration.length}`;
 		this.scr.render();
 	}
 
-	// Init
+	// Init functions
 	async init() {
 		await super.init();
 		this.scr = bl.screen({
 			smartCSR: true,
 		});
+		this.scr.enableInput();
 		this.drawSong();
 		this.loops.song = setInterval(this.#songLoop.bind(this), 500);
 		this.scr.key(['escape', 'q', 'C-c'], async () => {
@@ -77,8 +91,15 @@ class TuiApi extends Api {
 			await this.drawCollection();
 		});
 		this.boxes.song.focus();
-		this.scr.render();
 		await this.drawCollection();
+		this.scr.render();
+	}
+	initPlayPause() {
+		this.boxes.play.on('click', async () => {
+			console.error('playpressed');
+			await this.playPause();
+			await this.drawPlayPause();
+		});
 	}
 
 	// Draw functions (exlcuding loops)
@@ -90,6 +111,7 @@ class TuiApi extends Api {
 	async drawPlayPause() {
 		const playPaused = await this.getPlayPause() ? S.ICONS.PAUSE : S.ICONS.PLAY; // If the song is playing, the pause button should be shown
 		this.boxes.play.setContent(playPaused);
+		this.scr.render();
 	}
 	drawSong() {
 		this.boxes.song = bl.box({
@@ -100,8 +122,8 @@ class TuiApi extends Api {
 			content: 'Loading',
 			tags: true,
 			style: {
-				bg: 'black',
-				fg: 'white'
+				bg: 'white',
+				fg: 'black'
 			}
 		});
 		this.boxes.duration = bl.box({
@@ -113,8 +135,8 @@ class TuiApi extends Api {
 			content: 'Buffering',
 			tags: true,
 			style: {
-				bg: 'black',
-				fg: 'white'
+				bg: 'white',
+				fg: 'black'
 			}
 		});
 		this.boxes.play = bl.button({
@@ -124,13 +146,95 @@ class TuiApi extends Api {
 			height: 1,
 			content: S.ICONS.PLAY,
 			style: {
-				bg: 'black',
-				fg: 'white'
+				bg: 'white',
+				fg: 'black'
 			}
 		});
+		this.boxes.songPage = bl.box({
+			top: 0,
+			left: 'center',
+			width: '100%',
+			height: '100%-1',
+			style: {
+				bg: 'white',
+				fg: 'black'
+			}
+		});
+		this.boxes.spc.lheader = bl.box({
+			top: '5%',
+			left: '10%',
+			width: '10%',
+			height: 5,
+			border: {
+				type: 'line'
+			},
+			style: {
+				bg: 'white',
+				fg: 'black',
+				border: {
+					bg: 'white',
+					fg: 'black'
+				}
+			}
+		})
+		this.hideSongPageBoxes();
+		this.boxes.song.on('click', async () => {
+			await this.drawSongPage();
+		});
+		this.initPlayPause();
+		this.boxes.songPage.append(this.boxes.spc.lheader);
 		this.scr.append(this.boxes.song);
 		this.scr.append(this.boxes.duration);
 		this.scr.append(this.boxes.play);
+		this.scr.append(this.boxes.songPage);
+	}
+	async drawSongPage() {
+		this.atSongPage = true;
+		const songInfo = await this.songPage();
+		console.error(songInfo);
+		if (typeof songInfo === 'object') {
+			console.error(songInfo);
+			return;
+		} else {
+			return; // TODO: Add notification system and add an error here
+		}
+		const fg = invert(songInfo.bg, true);
+		this.colorSongPageBoxes()
+		this.showSongPageBoxes();
+		this.boxes.songPage.focus();
+		this.scr.render();
+	}
+	colorSongPageBoxes(bg, fg) {
+
+	}
+	hideSongPageBoxes() {
+		/*
+		 * This function along with its `show` counterpart don't have to be
+		 * complex and recursive because the only elements in the `spc` object
+		 * are either widgets or arrays of widgets.
+		 */
+		this.boxes.songPage.hide();
+		for (const box in this.boxes.spc) {
+			console.error(box);
+			if (Array.isArray(this.boxes.spc[box])) {
+				for (var i = 0; i < this.boxes.spc[box].length; i++) {
+					this.boxes.spc[box][i].hide();
+				}
+			}
+			this.boxes.spc[box].hide();
+		}
+	}
+	showSongPageBoxes() {
+		this.boxes.songPage.show();
+		for (const box in this.boxes.spc) {
+			console.error(box);
+			if (Array.isArray(this.boxes.spc[box])) {
+				for (var i = 0; i < this.boxes.spc[box].length; i++) {
+					this.boxes.spc[box][i].show();
+				}
+			}
+			this.boxes.spc[box].show();
+		}
 	}
 
 	// Helpers
@@ -141,7 +245,7 @@ class TuiApi extends Api {
 			_mymusic[i].img = await this.fetch(_mymusic[i].img);
 		}
 		this.mymusic = _mymusic;
-		console.error(this.mymusic);
+		//console.error(this.mymusic);
 	}
 }
 

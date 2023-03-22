@@ -9,7 +9,6 @@ import adblockerPlugin from 'puppeteer-extra-plugin-adblocker';
 import _pptr from 'puppeteer';
 import pptr from 'puppeteer-extra';
 import * as S from './selectors.mjs';
-import sleep from './sleep.mjs';
 import HTTP from './HTTP.mjs';
 
 pptr.use(stealthPlugin());
@@ -39,19 +38,21 @@ class Api extends HTTP {
 	}
 
 	/**
-	 * The function that handles keystokes
+	 * The function that handles keystrokes
 	 * @param {Array<string>} pressed 
 	 * @returns {Promise<void>}
 	 */
 	async keyHandler(pressed) {
 		// Play/Pause
-		let playPressed = false;
+		var playPressed = false;
 		for (const key of this.config.keybinds.play_pause) {
 			if (pressed.includes(key)) playPressed = true;
 			else this.keybinds.playPause = false;
 		}
 
-		for (const key of this.config.keybinds.play_pause_exclude) playPressed = pressed.includes(key) ? false : playPressed;
+		for (const key of this.config.keybinds.play_pause_exclude) {
+			if (pressed.includes(key)) playPressed = false;
+		}
 
 		if (playPressed && !this.keybinds.playPause) {
 			await this.playPause();
@@ -88,11 +89,11 @@ class Api extends HTTP {
 				setInterval(() => {
 					const cookieBtn = document.querySelector(S.COOKIES);
 					if (cookieBtn) cookieBtn.click();
-				}, 1000);
+				}, 500);
 			}, S);
 		}
 
-		if (this.config.autoAccept.violation && violation) {
+		if (this.config.autoAccept.violation) {
 			await page.evaluate(S => {
 				setInterval(() => {
 					const violation = document.querySelector(S.VIOLATION);
@@ -119,11 +120,13 @@ class Api extends HTTP {
 		console.log(ch.blue('Browser started, logging in...'));
 		const [page] = await this.browse.pages();
 		await this.autoAccept(page);
+		console.log(ch.blue('Autoaccept started'));
 		await page.waitForSelector(S.AVATAR, {
 			visible: true,
 			timeout: 0,
 		});
 		await page.waitForNetworkIdle();
+		console.log(ch.blue('Page loaded'));
 		await page.evaluate(() => {
 			setTimeout(() => {
 				alert('Saving, click ok and do not close this window');
@@ -131,17 +134,10 @@ class Api extends HTTP {
 		});
 		await page.waitForTimeout(this.config.timeout);
 		await this.browse.close();
+		console.log(ch.blue('Visual signin done'));
 
 		// Init
-		await new Promise((r, j) => {
-			this.xvfb.start(error => {
-				if (error) {
-					j(error);
-				} else {
-					r();
-				}
-			});
-		});
+		this.xvfb.startSync();
 		this.browse = await pptr.launch({
 			headless: false,
 			userDataDir: this.udd,
@@ -153,16 +149,15 @@ class Api extends HTTP {
 		console.log(ch.blue('Browser started with XVFB'));
 		this.page = (await this.browse.pages())[0];
 		// await this.page.reload();
-		console.log(ch.blue('Collection loaded'));
-		console.log(await this.page.cookies());
 		await this.page.waitForNetworkIdle({
-			idleTime: 1000
+			idleTime: this.config.idleTime
 		});
 		await this.page.screenshot({ path: this.config.screenshot_path });
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
 		await this.autoAccept(this.page);
+		console.log(ch.blue('Autoaccept started'));
 		await super.init(this.keyHandler.bind(this));
 		console.log(ch.green('Login successful'));
 		this.loaded = true;
@@ -229,7 +224,7 @@ class Api extends HTTP {
 			if (!bgColor) {
 				return {
 					bg: 'white',
-					fg: 'black',
+					fg: 'black'
 				};
 			}
 
@@ -425,6 +420,44 @@ class Api extends HTTP {
 				}
 			}, S);
 			return grid;
+		} catch (err) {
+			console.error(err);
+		}
+	}
+	
+	async songPage() {
+		try {
+			const tuner = await this.page.$(S.SONG.BAR);
+			await tuner.click();
+			await this.page.waitForNetworkIdle({
+				idleTime: 200
+			});
+			const songpage = await this.page.evaluate(S => {
+				try {
+					var res = {
+						bg: '#000000',
+						left: null
+					}
+					res.bg = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.BG).getAttribute('fill') ?? '#000000';
+					const leftcol = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.LEFT_COL);
+					if (leftcol) {
+						const collected = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.COLLECTED);
+						const title = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.TITLE) ?? 'Untitled';
+						const artist = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.ARTIST) ?? false;
+						res.left = {
+							header: {
+								collected,
+								title,
+								artist
+							}
+						}
+					}
+					return res;
+				} catch (err) {
+					return err.toString();
+				}
+			}, S);
+			return songpage;
 		} catch (err) {
 			console.error(err);
 		}

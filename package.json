@@ -4,15 +4,15 @@
   "description": "Pandora TUI (attempt 6 i guess)",
   "main": "index.mjs",
   "scripts": {
-    "test": "node . 2> errfile",
-    "start": "node . 2> /tmp/p-term.log"
+    "test": "node .",
+    "start": "node ."
   },
   "author": "ron",
   "license": "GPL-3.0-or-later",
   "dependencies": {
     "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
     "chalk": "^5.2.0",
-    "discord-game": "^0.1.2",
     "entities": "^4.4.0",
     "figlet": "^1.5.2",
     "file-type": "^18.2.1",
@@ -21,6 +21,7 @@
     "got": "^12.5.3",
     "invert-color": "^2.0.0",
     "jimp": "^0.22.7",
+    "lolcatjs": "^2.4.1",
     "puppeteer": "^19.7.3",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-adblocker": "^2.13.5",
@@ -28,10 +29,7 @@
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "python-shell": "^5.0.0",
     "rgb2hex": "^0.2.5",
+    "word-wrap": "^1.2.3",
     "xvfb": "^0.4.0"
-  },
-  "devDependencies": {
-    "eslint": "^8.34.0",
-    "xo": "^0.53.1"
   }
 }

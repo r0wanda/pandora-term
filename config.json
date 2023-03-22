@@ -4,21 +4,27 @@
         "cookies": true,
         "violation": true
     },
+
     "keybinds": {
         "_comment": "The key(s) to use for the keybind. Order does not matter, Left / Right versions of keys can be specified (eg. `Left Control`)",
         "_exclude_comment": "If the keybind interferes with other apps, choose keys to exclude (the below example will respond to Pause, but not Meta+Pause)",
         "play_pause": ["Pause"],
         "play_pause_exclude": ["Meta"]
     },
+
     "_screenshot_comment": "Disabling screenshot could break the program for some, and won't decrease loading times significantly",
     "screenshot": true,
+
     "_screenshot_path_comment": "Changing this to /tmp/scr.png is ideal, but can also break things",
     "screenshot_path": "scr.png",
-    "_timeout_comment": "Time to wait after login. 2000 is reccomended, add in increments of 1000 until the `Login failed` error stops. Increase when logging in to fix some problems",
-    "timeout": 4000,
+
+    "_timeout_comment": "Time to wait after login (not actually timeout). 2000 is reccomended, add in increments of 1000 until the `Login failed` error stops. Increase when logging in to fix some problems",
+    "timeout": 6000,
+
     "_collection_timeout_comment": "Timeout for waiting for collection. 30000 (30 seconds) is default, you can change it to a larger value or to 0 for no timeout.",
     "collection_timeout": 30000,
-    "_tmp_comment": "The temporary to save files, /tmp is reccomended",
+
     "tmp": "/tmp",
-    "logfile": "/tmp/p-term.log"
+    "logfile": "errfile",
+    "idleTime": 2000
 }
