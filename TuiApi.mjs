@@ -73,7 +73,7 @@ class TuiApi extends Api {
 	async init() {
 		await super.init();
 		this.scr = bl.screen({
-			smartCSR: true,
+			smartCSR: true
 		});
 		this.scr.enableInput();
 		this.drawSong();
@@ -235,6 +235,9 @@ class TuiApi extends Api {
 			}
 			this.boxes.spc[box].show();
 		}
+	}
+	makeTransparent() {
+		
 	}
 
 	// Helpers
