@@ -8,7 +8,6 @@ import ww from 'word-wrap';
 class Notifications {
     scr;
     notifs;
-    //notifTimeouts;
     totalHeight;
     transparent;
 
@@ -17,7 +16,6 @@ class Notifications {
         this.transparent = transparent;
 
         this.notifs = new Map();
-        //this.notifTimeouts = [];
         this.totalHeight = 0;
 
         this.notif = bl.box({
@@ -102,7 +100,6 @@ class Notifications {
             }
         });
         this.totalHeight += height;
-        //this.notifs.push(notif);
         this.notif.append(notif);
         this.notifs.set(notif, title);
         this.scr.render();
