@@ -26,5 +26,6 @@
 
     "tmp": "/tmp",
     "logfile": "errfile",
-    "idleTime": 2000
+    "idleTime": 2000,
+    "tips": true
 }

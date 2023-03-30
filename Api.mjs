@@ -25,6 +25,8 @@ class Api extends HTTP {
 	xvfb;
 	keybinds;
 	loaded;
+	closeCount;
+	closeLoop;
 
 	constructor() {
 		super();
@@ -35,6 +37,8 @@ class Api extends HTTP {
 		this.xvfb = new Xvfb(S.XVFB_OPTS);
 		this.loaded = false;
 		this.executablePath = _pptr.executablePath();
+		this.closeCount = 0;
+		this.closeLoop = setInterval(this.closeFunc.bind(this), 2000);
 	}
 
 	/**
@@ -61,7 +65,7 @@ class Api extends HTTP {
 	}
 
 	/**
-	 * The close function that stops xvfb and closes the browser
+	 * The close function (stops xvfb and closes the browser)
 	 * @returns {Promise<void>}
 	 */
 	async close() {
@@ -80,10 +84,9 @@ class Api extends HTTP {
 	/**
 	 * Autoaccept function (For cookies and violations)
 	 * @param {Page} page 
-	 * @param {boolean} violation 
 	 * @returns {Promise<void>}
 	 */
-	async autoAccept(page, violation = true) {
+	async autoAccept(page) {
 		if (this.config.autoAccept.cookies) {
 			await page.evaluate(S => {
 				setInterval(() => {
@@ -146,7 +149,7 @@ class Api extends HTTP {
 			args: S.ARGS.concat(S.XVFB(this.xvfb)),
 			executablePath: this.executablePath
 		});
-		console.log(ch.blue('Browser started with XVFB'));
+		console.log(ch.blue('Browser started with XVFB') + '\n' + ch.green('Loading page...'));
 		this.page = (await this.browse.pages())[0];
 		// await this.page.reload();
 		await this.page.waitForNetworkIdle({
@@ -425,9 +428,13 @@ class Api extends HTTP {
 		}
 	}
 	
+	/**
+	 * 
+	 * @returns 
+	 */
 	async songPage() {
 		try {
-			const tuner = await this.page.$(S.SONG.BAR);
+			const tuner = await this.page.$(S.SONG.BAR_HIT);
 			await tuner.click();
 			await this.page.waitForNetworkIdle({
 				idleTime: 200

@@ -1,8 +1,10 @@
 import bl from 'blessed';
 import invert from 'invert-color';
 import blc from 'blessed-contrib';
+import randItem from 'random-item';
 import Api from './Api.mjs'
 import * as S from './selectors.mjs';
+import Notifications from './Notifications.mjs';
 
 // Graphic design is my passion
 
@@ -14,6 +16,7 @@ class TuiApi extends Api {
 	S;
 	mymusic;
 	atSongPage;
+	notifs;
 
 	constructor() {
 		super();
@@ -56,6 +59,7 @@ class TuiApi extends Api {
 		this.boxes.song.setContent(template);
 		this.boxes.duration.setContent(duration);
 		await this.drawPlayPause();
+
 		this.boxes.song.style.bg = colors.bg;
 		this.boxes.song.style.fg = colors.fg;
 		this.boxes.duration.style.bg = colors.bg;
@@ -66,6 +70,9 @@ class TuiApi extends Api {
 		this.boxes.spc.lheader.style.fg = colors.fg;
 		this.boxes.spc.lheader.style.border.fg = colors.fg;
 		this.boxes.duration.left = `100%-${duration.length}`;
+
+		this.notifs.checkHide(true);
+
 		this.scr.render();
 	}
 
@@ -91,12 +98,15 @@ class TuiApi extends Api {
 			await this.drawCollection();
 		});
 		this.boxes.song.focus();
-		await this.drawCollection();
 		this.scr.render();
+		this.notifs = new Notifications(this.scr, false);
+		if (this.config.tips) this.notifs.info('Tip', randItem(this.tips));
+		//this.notifs.info('test', 'a reallllllll llllllllllll llllllll lllllllllllll lll llllllll llllll lllllllll lllllll llll lllly lllllll llllllll lllllll lllong nnnn nnnnnnn nnnnnn nnnnnnn notificationnn nnnnnnnnnnnnn nnnnnnnnn nnnnnnnnnnnnnn nnnnnnnnnnnnnnnnn nnnnnnnnnnnnnnnnnnnn nnnnnnnnnnnnnnnnnn nn');
+		await this.drawCollection();
 	}
 	initPlayPause() {
 		this.boxes.play.on('click', async () => {
-			console.error('playpressed');
+			
 			await this.playPause();
 			await this.drawPlayPause();
 		});
@@ -196,7 +206,7 @@ class TuiApi extends Api {
 			console.error(songInfo);
 			return;
 		} else {
-			return; // TODO: Add notification system and add an error here
+			
 		}
 		const fg = invert(songInfo.bg, true);
 		this.colorSongPageBoxes()
@@ -237,7 +247,7 @@ class TuiApi extends Api {
 		}
 	}
 	makeTransparent() {
-		
+		//TODO: iterate through this.boxes (excluding some), making boxes transparent
 	}
 
 	// Helpers

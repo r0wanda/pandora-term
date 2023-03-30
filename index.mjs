@@ -5,8 +5,8 @@ import TuiApi from './TuiApi.mjs';
 import { createWriteStream as cws, readFileSync as rf } from 'node:fs';
 
 const config = JSON.parse(rf('config.json'));
-const stderr = cws(config.logfile);
-process.stderr.write = stderr.write.bind(stderr);
+//const stderr = cws(config.logfile);
+//process.stderr.write = stderr.write.bind(stderr);
 const fig = _fig.textSync;
 lol.options.seed = Math.round(Math.random() * 1000);
 lol.options.colors = true;

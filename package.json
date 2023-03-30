@@ -4,7 +4,7 @@
   "description": "Pandora TUI (attempt 6 i guess)",
   "main": "index.mjs",
   "scripts": {
-    "test": "node .",
+    "test": "node . 2> errfile",
     "start": "node ."
   },
   "author": "ron",
@@ -27,6 +27,7 @@
     "puppeteer-extra-plugin-adblocker": "^2.13.5",
     "puppeteer-extra-plugin-stealth": "^2.11.1",
     "python-shell": "^5.0.0",
+    "random-item": "^4.0.1",
     "rgb2hex": "^0.2.5",
     "word-wrap": "^1.2.3",
     "xvfb": "^0.4.0"

@@ -15,10 +15,19 @@ class RPC extends Keybind {
         this.appID = appid;
     }
 
+    /**
+	 * The init function
+	 * @param {function} handler Gets passed down to Keybind
+	 * @returns {Promise<void>}
+	 */
     async init(handler) {
         await super.init(handler);
     }
 
+    /**
+     * Initializes Discord RPC
+     * @returns {Promise<boolean>} Returns false if unsuccessful, else returns true
+     */
     async initRPC() {
         if (!await this.#discordOpen()) return false;
         this.py = new PythonShell(path.join(this.dirname, 'python/RPC.py'));
@@ -49,6 +58,14 @@ class RPC extends Keybind {
         }
     }
 
+    /**
+     * Update status
+     * @param {string} state 
+     * @param {string} details 
+     * @param {Date} startAt 
+     * @param {Date} endAt 
+     * @returns {Promise<boolean>} Returns false if unsuccessful, else returns true
+     */
     async updateRPC(state, details, startAt = new Date(), endAt = new Date()) {
         if (!this.#discordOpen()) return;
         if (!this.py) {
@@ -59,6 +76,10 @@ class RPC extends Keybind {
         return true;
     }
 
+    /**
+     * Get the Pandora-Term Application ID
+     * @returns {string} The Pandora-Term Application ID
+     */
     static getAppID() {
         // For Pandora-Term ONLY
         return '1084318125329219688';

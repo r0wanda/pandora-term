@@ -22,7 +22,7 @@ class Notifications {
             top: '5%',
             right: 2,
             width: 27,
-            height: 'shrink',
+            height: 0,
             style: {
                 bg: this.transparent ? null : 'black'
             }
@@ -42,14 +42,20 @@ class Notifications {
         this.scr.render();
     }
 
+    checkHide(noRender = false) {
+        if (this.notif.children.length === 0) this.notif.hide();
+        this.notif.height = this.calcTotalHeight();
+        if (!noRender) this.scr.render();
+    }
+
     transitionOut(notif, color) {
         var title = this.notifs.get(notif);
-        var _totalHeight = 0;
         if (notif.height !== 2) {
             var content = notif.getContent().split('\n');
             content.pop();
             content = content.join('\n');
             notif.height--;
+            this.totalHeight--;
         } else if (notif.width !== 2) {
             notif.width--;
             if (notif.width > 2) notif.left++;
@@ -61,16 +67,16 @@ class Notifications {
         } else {
             this.notif.remove(notif);
         }
-        this.notif.children.map(n => {
-            n.top = _totalHeight;
-            _totalHeight += n.height;
-        });
-        if (this.notif.children.length === 0) this.notif.hide();
-        this.totalHeight = this.totalHeight;
+        this.checkHide(true);
         this.scr.render();
     }
 
+    calcTotalHeight() {
+        return this.notif.children.reduce((a, c) => a + c.height, 0);
+    }
+
     msg(title, desc, color) {
+        if (!title || !desc || !color) throw new Error('Missing one or more options');
         desc = ww(desc, {
             width: '25',
             indent: '',
@@ -80,7 +86,7 @@ class Notifications {
         const height = desc.split('\n').length + 2;
         this.notif.show();
         const notif = bl.box({
-            top: this.totalHeight,
+            top: this.calcTotalHeight(),
             left: 0,
             width: 27,
             height: height,
@@ -103,8 +109,9 @@ class Notifications {
         this.notif.append(notif);
         this.notifs.set(notif, title);
         this.scr.render();
+        this.checkHide();
         setTimeout((notif => {
-            setInterval(this.transitionOut.bind(this), 50, notif, color);
+            setInterval(this.transitionOut.bind(this), 25, notif, color);
             this.scr.render();
         }).bind(this), timeout, notif);
     }

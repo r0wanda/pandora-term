@@ -10,13 +10,20 @@ import RPC from './RPC.mjs';
 class HTTP extends RPC {
     config;
     files;
+    tips;
 
     constructor() {
         super(RPC.getAppID());
         this.files = [];
-        this.config = JSON.parse(rf('config.json'));
+        this.config = JSON.parse(rf(path.join(this.dirname, 'config.json')));
+        this.tips = JSON.parse(rf(path.join(this.dirname, 'tips.json'))).tips;
     }
 
+    /**
+	 * The init function
+	 * @param {function} handler Gets passed down to Keybind
+	 * @returns {Promise<void>}
+	 */
     async init(handler) {
         await super.init(handler);
     }
@@ -32,6 +39,10 @@ class HTTP extends RPC {
             }
         }
     }
+    /**
+	 * The close funtion (cleans up files)
+	 * @returns {Promise<void>}
+	 */
     async close() {
         await super.close();
         for (const file of this.files) {

@@ -1,0 +1,17 @@
+{
+    "tips": [
+        "There are 3 ways to play/pause music, by clicking the play button, pressing the space bar, or by clicking the Pause key (works even when the app isn't focused).",
+        "You can close the app in 3 ways: By pressing Ctrl-C, Q, or the Escape key.",
+        "If something weird is happening, check the log file at /tm/p-term.log. If this doesn't explain the issue, report it on Github.",
+        "If the success of logins are inconsistent, try increading the `idleTime` and/or `timeout` in `config.json`.",
+        "The file `config.json` contains configurations, look through it if you want to tweak something.",
+        "You can configure certain keybinds in `config.json` if they are interfering with other apps, or if they are inconvienent.",
+        "This app adds many new features to pandora, such as Discord RPC, keybinds, album summaries, and the added bonus of looking cool while using it.",
+        "Even these tips are customizable, you can edit them in tips.json if you want to note something about this app.",
+        "You can make the app transparent by hitting the T key, or by configuring it in `config.json`",
+        "This app is designed to add features to pandora, not to be lightweight. You can use other apps like Pithos for a more lightweight app.",
+        "You can turn off these tips in `config.json` if you want to.",
+        "`Execution context was destroyed` errors are normal occasionally on startup, but if they are happening often, submit an issue on Github.",
+        "This app doesn't steal your information, but don't take my word for it and look through the open-source code if you're suspicious."
+    ]
+}
