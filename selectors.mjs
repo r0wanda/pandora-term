@@ -10,12 +10,21 @@ export const SONG = {
 	BAR_HIT: 'a.Tuner__Audio__NowPlayingHitArea',
 	BAR_PAGE: {
 		ONDEMAND: {
+			ONDEMAND: '.NowPlayingOnDemand',
 			BG: 'svg.BlurredBackground__svg > rect',
 			LEFT_COL: {
 				LEFT_COL: 'div.NowPlayingOnDemand__leftCol',
 				COLLECTED: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemLeftColumn > div.RowItemCollectedBadge',
 				TITLE: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemCenterColumn > div.RowItemCenterColumn__mainText > a',
 				ARTIST: 'div.NowPlayingOnDemand__trackListHeader > div.RowItem > div.SourceCard > div.SourceCard__trigger > div.RowItem__content > div.RowItem__columns > div.RowItemCenterColumn > div.RowItemCenterColumn__secondText > a'
+			}
+		},
+		NOWPLAYING: {
+			NOWPLAYING: '.NowPlaying',
+			CENTER: {
+				CENTER: 'div.nowPlayingTopInfo',
+				SESSION: 'div.nowPlayingTopInfo > div.NowPlayingTopInfoSessionName > .NowPlayingTopInfoSessionName__header > *',
+				IMG: 'div.nowPlayingTopInfo__artContainer__art > div.ImageLoader > img'
 			}
 		}
 	},

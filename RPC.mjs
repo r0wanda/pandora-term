@@ -1,6 +1,5 @@
 import url from 'node:url';
 import path from 'node:path';
-import pgrep from 'find-process';
 import { PythonShell } from 'python-shell';
 import Keybind from './Keybind.mjs';
 
@@ -13,15 +12,6 @@ class RPC extends Keybind {
         super();
         this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
         this.appID = appid;
-    }
-
-    /**
-	 * The init function
-	 * @param {function} handler Gets passed down to Keybind
-	 * @returns {Promise<void>}
-	 */
-    async init(handler) {
-        await super.init(handler);
     }
 
     /**
@@ -49,13 +39,7 @@ class RPC extends Keybind {
         }.bind(this))
     }
     async #discordOpen() {
-        try {
-            const procs = await pgrep('name', 'Discord', true);
-            return procs.length > 0;
-        } catch (err) {
-            console.error(err);
-            return false;
-        }
+        return await this.pgrep('Discord');
     }
 
     /**

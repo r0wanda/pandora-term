@@ -10,13 +10,8 @@ const config = JSON.parse(rf('config.json'));
 const fig = _fig.textSync;
 lol.options.seed = Math.round(Math.random() * 1000);
 lol.options.colors = true;
-/*process.argv.map(arg => {
-	switch (arg) {
 
-	}
-})*/
-
-const api = new TuiApi();
+const api = new TuiApi(process.argv);
 
 console.log(lol.fromString(fig('Pandora', {
 	font: 'Slant'

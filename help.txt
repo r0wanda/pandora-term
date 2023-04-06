@@ -1,0 +1,12 @@
+OPTIONS ARE NOT IMPLEMENTED YET (excluding --help)
+
+Usage: pandora-term [options]
+
+If no options are provided, the app will be run normally.
+
+Options:
+    --help
+        Display this help message
+
+    --fix
+        Fix some problems by removing the user data directory and resetting the configuration.

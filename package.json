@@ -17,11 +17,14 @@
     "figlet": "^1.5.2",
     "file-type": "^18.2.1",
     "find-process": "^1.4.7",
-    "gkm": "^0.2.0",
+    "fkill": "^8.1.0",
+    "gkm-class": "^1.0.0",
     "got": "^12.5.3",
+    "has-flag": "^5.0.1",
     "invert-color": "^2.0.0",
     "jimp": "^0.22.7",
     "lolcatjs": "^2.4.1",
+    "ora": "^6.3.0",
     "puppeteer": "^19.7.3",
     "puppeteer-extra": "^3.3.4",
     "puppeteer-extra-plugin-adblocker": "^2.13.5",
@@ -29,6 +32,7 @@
     "python-shell": "^5.0.0",
     "random-item": "^4.0.1",
     "rgb2hex": "^0.2.5",
+    "supports-sixel": "^1.0.0",
     "word-wrap": "^1.2.3",
     "xvfb": "^0.4.0"
   }

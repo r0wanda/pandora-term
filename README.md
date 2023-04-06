@@ -1,5 +1,7 @@
 # Pandora Term
-A TUI interface for Pandora Radio
+A TUI interface for Pandora (the music streaming service)
+
+*This program is built with Pandora Premium in mind, but later will get tested for Pandora free plan support. Pandora plus will never be supported because I don't have access to it (unless it shares some selectors).*
 
 ***Disclaimer: The creator of this program is not responsible for any things that may happen to your pandora account (eg. TOS violations i guess). There is no malicious code, you can read through it if you're sceptical***
 
@@ -30,5 +32,8 @@ Run in pandora-term folder
 ```sh
 sh install.sh
 ```
+
+## Related projects
+* [Spotify-TUI](https://github.com/Rigellute/spotify-tui)
 
 ### Logfile at /tmp/p-term.log

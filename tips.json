@@ -2,7 +2,7 @@
     "tips": [
         "There are 3 ways to play/pause music, by clicking the play button, pressing the space bar, or by clicking the Pause key (works even when the app isn't focused).",
         "You can close the app in 3 ways: By pressing Ctrl-C, Q, or the Escape key.",
-        "If something weird is happening, check the log file at /tm/p-term.log. If this doesn't explain the issue, report it on Github.",
+        "If something weird is happening, check the log file at /tmp/p-term.log. If this doesn't explain the issue, report it on Github.",
         "If the success of logins are inconsistent, try increading the `idleTime` and/or `timeout` in `config.json`.",
         "The file `config.json` contains configurations, look through it if you want to tweak something.",
         "You can configure certain keybinds in `config.json` if they are interfering with other apps, or if they are inconvienent.",

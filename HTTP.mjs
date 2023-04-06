@@ -11,21 +11,23 @@ class HTTP extends RPC {
     config;
     files;
     tips;
+    help;
 
     constructor() {
         super(RPC.getAppID());
         this.files = [];
         this.config = JSON.parse(rf(path.join(this.dirname, 'config.json')));
         this.tips = JSON.parse(rf(path.join(this.dirname, 'tips.json'))).tips;
+        this.help = rf(path.join(this.dirname, 'help.txt'), 'utf8');
     }
 
-    /**
-	 * The init function
-	 * @param {function} handler Gets passed down to Keybind
-	 * @returns {Promise<void>}
-	 */
-    async init(handler) {
-        await super.init(handler);
+    isURL(url) {
+        try {
+            new URL(url);
+            return true;
+        } catch {
+            return false;
+        }
     }
 
     #exRm(path) {
@@ -40,13 +42,13 @@ class HTTP extends RPC {
         }
     }
     /**
-	 * The close funtion (cleans up files)
-	 * @returns {Promise<void>}
-	 */
+     * The close funtion (cleans up files)
+     * @returns {Promise<void>}
+     */
     async close() {
         await super.close();
         for (const file of this.files) {
-            this.#exRm(path);   
+            this.#exRm(path);
         }
     }
 
@@ -60,27 +62,31 @@ class HTTP extends RPC {
         try {
             const res = await got(url).buffer();
             if (!save) return res;
-            const bytes = rb(32)
-                .toString('base64url')
-                .substring(0, 9);
-            const { mime, ext } = await ftfb(res);
-            const isImg = mime.includes('image');
-            const isPng = isImg ? ext === 'png' : false;
-            const toCnv = isImg && !isPng && cnvimg;
-            const fname = toCnv ? path.join(this.config.tmp, `${bytes}.png`) : path.join(this.config.tmp, `${bytes}.${ext}`);
-            this.files.push(fname);
-            if (toCnv) {
-                const img = await jimp.read(res);
-            img.write(fname);
-            } else {
-                wf(fname, res);
-            }
+            const fname = this.save(res, cnvimg);
             return fname;
         } catch (err) {
             console.error(err);
             console.error('Falling back to placeholder image');
-            return path.join(this.dirname, 'collection.png');
+            return path.join(this.dirname, 'placeholder.png');
         }
+    }
+    async save(buf, cnvimg = true) {
+        const bytes = rb(32)
+            .toString('base64url')
+            .substring(0, 9);
+        const { mime, ext } = await ftfb(buf);
+        const isImg = mime.includes('image');
+        const isPng = isImg ? ext === 'png' : false;
+        const toCnv = isImg && !isPng && cnvimg;
+        const fname = toCnv ? path.join(this.config.tmp, `${bytes}.png`) : path.join(this.config.tmp, `${bytes}.${ext}`);
+        this.files.push(fname);
+        if (toCnv) {
+            const img = await jimp.read(buf);
+            img.write(fname);
+        } else {
+            wf(fname, buf);
+        }
+        return fname;
     }
 }
 

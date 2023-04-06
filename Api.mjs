@@ -23,10 +23,12 @@ class Api extends HTTP {
 	page;
 	udd;
 	xvfb;
+	error;
 	keybinds;
 	loaded;
-	closeCount;
-	closeLoop;
+	#closeCount;
+	#loopsSinceClose;
+	#prevCloseCount;
 
 	constructor() {
 		super();
@@ -36,9 +38,29 @@ class Api extends HTTP {
 		this.udd = path.join(this.dirname, 'data');
 		this.xvfb = new Xvfb(S.XVFB_OPTS);
 		this.loaded = false;
+		this.error = false;
 		this.executablePath = _pptr.executablePath();
-		this.closeCount = 0;
-		this.closeLoop = setInterval(this.closeFunc.bind(this), 2000);
+		this.#closeCount = 0;
+		this.#loopsSinceClose = 0;
+		this.#prevCloseCount = 0;
+		setInterval(this.#closeFunc.bind(this), 1000);
+	}
+
+	/**
+	 * Function that handles an unexpected session closure (not because of a slow quit request)
+	 * @returns {Promise<void>}
+	 */
+	async #closeFunc() {
+		if (!this.config.system.closeCounter) return;
+		if (this.#prevCloseCount < this.#closeCount) this.#loopsSinceClose = 0;
+		if (this.#loopsSinceClose > 5) this.#closeCount = 0;
+		this.#prevCloseCount = this.#closeCount;
+		// This will only trigger when the machine wakes from sleep, or something else cauing the browser/tab to close other than a normal app quit
+		if (this.#closeCount > 20) {
+			console.log('Closing because of a session close. This should not happen out of nowhere.');
+			console.log('This is normal after the machine wakes from sleep.');
+			process.exit(1);
+		}
 	}
 
 	/**
@@ -64,6 +86,10 @@ class Api extends HTTP {
 		}
 	}
 
+	setError(err) {
+		this.error = err;
+	}
+
 	/**
 	 * The close function (stops xvfb and closes the browser)
 	 * @returns {Promise<void>}
@@ -73,12 +99,11 @@ class Api extends HTTP {
 		if (this.browse && this.browse.isConnected) {
 			await this.browse.close();
 		}
-
 		if (this.xvfb) {
 			this.xvfb.stopSync();
 		}
-
-		process.exit(0);
+		if (!this.error) process.exit(0);
+		else process.exit(1);
 	}
 
 	/**
@@ -87,16 +112,20 @@ class Api extends HTTP {
 	 * @returns {Promise<void>}
 	 */
 	async autoAccept(page) {
-		if (this.config.autoAccept.cookies) {
+		if (this.config.system.autoAccept.cookies) {
 			await page.evaluate(S => {
+				var clicked = false;
 				setInterval(() => {
 					const cookieBtn = document.querySelector(S.COOKIES);
-					if (cookieBtn) cookieBtn.click();
+					if (!clicked && cookieBtn) {
+						clicked = true;
+						cookieBtn.click();
+					}
 				}, 500);
 			}, S);
 		}
 
-		if (this.config.autoAccept.violation) {
+		if (this.config.system.autoAccept.violation) {
 			await page.evaluate(S => {
 				setInterval(() => {
 					const violation = document.querySelector(S.VIOLATION);
@@ -104,6 +133,22 @@ class Api extends HTTP {
 				}, 250);
 			}, S);
 		}
+	}
+
+	/**
+	 * Sets listeners to log console output in puppeteer (for debug only)
+	 * @param {Page} page 
+	 * @returns {Promise<void>}
+	 */
+	async logPPTRConsole(page) {
+		page
+			.on('console', message =>
+				console.error(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
+			.on('pageerror', ({ message }) => console.error(message))
+			.on('response', response =>
+				console.error(`${response.status()} ${response.url()}`))
+			.on('requestfailed', request =>
+				console.error(`${request.failure().errorText} ${request.url()}`));
 	}
 
 	// Init functions
@@ -122,6 +167,7 @@ class Api extends HTTP {
 		});
 		console.log(ch.blue('Browser started, logging in...'));
 		const [page] = await this.browse.pages();
+		//await this.logPPTRConsole(page);
 		await this.autoAccept(page);
 		console.log(ch.blue('Autoaccept started'));
 		await page.waitForSelector(S.AVATAR, {
@@ -151,18 +197,19 @@ class Api extends HTTP {
 		});
 		console.log(ch.blue('Browser started with XVFB') + '\n' + ch.green('Loading page...'));
 		this.page = (await this.browse.pages())[0];
+		//this.logPPTRConsole(this.page);
 		// await this.page.reload();
 		await this.page.waitForNetworkIdle({
 			idleTime: this.config.idleTime
 		});
-		await this.page.screenshot({ path: this.config.screenshot_path });
+		if (this.config.system.screenshot) await this.page.screenshot({ path: this.config.screenshot_path });
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
 		await this.autoAccept(this.page);
 		console.log(ch.blue('Autoaccept started'));
-		await super.init(this.keyHandler.bind(this));
 		console.log(ch.green('Login successful'));
+		console.log(ch.green('Starting TUI'));
 		this.loaded = true;
 	}
 
@@ -175,8 +222,10 @@ class Api extends HTTP {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.TITLE));
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getSong'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('getSong'));
+			} else console.error(err);
 			return null;
 		}
 	}
@@ -189,8 +238,10 @@ class Api extends HTTP {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.ARTIST));
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getArtist'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('getArtist'));
+			} else console.error(err);
 			return null;
 		}
 	}
@@ -206,8 +257,10 @@ class Api extends HTTP {
 			const template = `${elapsed} | ${remaining} `;
 			return template;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getDuration'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('getDuration'));
+			} else console.error(err);
 			return null;
 		}
 	}
@@ -240,8 +293,10 @@ class Api extends HTTP {
 				fg,
 			};
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getColors'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('getColors'));
+			} else console.error(err);
 			return {
 				bg: 'white',
 				fg: 'black',
@@ -256,8 +311,10 @@ class Api extends HTTP {
 		try {
 			return await this.page.$(S.SONG.PAUSE) ?? false;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getPlayPause'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('getPlayPause'));
+			} else console.error(err);
 			return false;
 		}
 	}
@@ -289,8 +346,11 @@ class Api extends HTTP {
 				(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
 			}, S);
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) console.error(S.ERRS.CLOSED_MSG('getColors'));
-			else console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('playPause'));
+			} else console.error(err);
+			return;
 		}
 	}
 
@@ -319,7 +379,7 @@ class Api extends HTTP {
 			await this.page.waitForSelector(S.MYMUSIC.INFINITEGRID, {
 				timeout: this.config.collection_timeout
 			});
-			await this.page.screenshot({
+			if (this.config.system.screenshot) await this.page.screenshot({
 				path: path.join(this.config.tmp, 'collection.png')
 			});
 
@@ -424,33 +484,54 @@ class Api extends HTTP {
 			}, S);
 			return grid;
 		} catch (err) {
-			console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('collection'));
+			} else console.error(err);
 		}
 	}
-	
+
+	async waitForElements(pr, timeout = 5000) {
+		const promises = [];
+		pr.map(e => {
+			promises.push(new Promise((async (r, j) => {
+				try {
+					await this.page.waitForSelector(e, {
+						timeout
+					});
+					r();
+				} catch (err) {
+					j(err);
+				}
+			}).bind(this)))
+		}, this);
+		return await Promise.any(promises);
+	}
 	/**
-	 * 
-	 * @returns 
+	 * Get song page
+	 * @returns {Promise<object>}
 	 */
 	async songPage() {
 		try {
-			const tuner = await this.page.$(S.SONG.BAR_HIT);
-			await tuner.click();
-			await this.page.waitForNetworkIdle({
-				idleTime: 200
-			});
-			const songpage = await this.page.evaluate(S => {
+			await this.page.evaluate(S => {
+				document.querySelector(S.BAR_HIT).click();
+			}, S.SONG);
+			await this.waitForElements([S.SONG.BAR_PAGE.ONDEMAND.ONDEMAND, S.SONG.BAR_PAGE.NOWPLAYING.NOWPLAYING]);
+			var songpage = await this.page.evaluate(S => {
 				try {
 					var res = {
 						bg: '#000000',
-						left: null
+						left: null,
+						center: false
 					}
-					res.bg = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.BG).getAttribute('fill') ?? '#000000';
-					const leftcol = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.LEFT_COL);
+					res.bg = document.querySelector(S.ONDEMAND.BG).getAttribute('fill') ?? '#000000';
+					const leftcol = document.querySelector(S.ONDEMAND.LEFT_COL.LEFT_COL);
+					const center = document.querySelector(S.NOWPLAYING.CENTER.CENTER);
+					res.center = center;
 					if (leftcol) {
-						const collected = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.COLLECTED);
-						const title = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.TITLE) ?? 'Untitled';
-						const artist = document.querySelector(S.SONG.BAR_PAGE.ONDEMAND.LEFT_COL.ARTIST) ?? false;
+						const collected = document.querySelector(S.ONDEMAND.LEFT_COL.COLLECTED);
+						const title = document.querySelector(S.ONDEMAND.LEFT_COL.TITLE) ?? 'Untitled';
+						const artist = document.querySelector(S.ONDEMAND.LEFT_COL.ARTIST) ?? false;
 						res.left = {
 							header: {
 								collected,
@@ -458,15 +539,36 @@ class Api extends HTTP {
 								artist
 							}
 						}
+					} else if (center) {
+						const session = document.querySelector(S.NOWPLAYING.CENTER.SESSION).innerText;
+						var imgs = document.querySelectorAll(S.NOWPLAYING.CENTER.IMG);
+						imgs = [...imgs];
+						imgs = imgs.map(img => img.src);
+						res.center = {
+							session,
+							img: imgs[0],
+							imgs: imgs
+						}
 					}
 					return res;
 				} catch (err) {
 					return err.toString();
 				}
-			}, S);
+			}, S.SONG.BAR_PAGE);
+			if (songpage.center) {
+				songpage.center.img = await this.fetch(songpage.center.img);
+				const newImgs = [];
+				for (var i of songpage.center.imgs) {
+					newImgs.push(await this.fetch(i));
+				}
+				songpage.center.imgs = newImgs;
+			}
 			return songpage;
 		} catch (err) {
-			console.error(err);
+			if (S.ERRS.CLOSED(err)) {
+				this.#closeCount++;
+				console.error(S.ERRS.CLOSED_MSG('songPage'));
+			} else console.error(err);
 		}
 	}
 }

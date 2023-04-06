@@ -70,6 +70,9 @@ class Notifications {
         this.checkHide(true);
         this.scr.render();
     }
+    transitionLoop(notif, color) {
+        return setInterval(this.transitionOut.bind(this), 25, notif, color);
+    }
 
     calcTotalHeight() {
         return this.notif.children.reduce((a, c) => a + c.height, 0);
@@ -110,10 +113,17 @@ class Notifications {
         this.notifs.set(notif, title);
         this.scr.render();
         this.checkHide();
-        setTimeout((notif => {
-            setInterval(this.transitionOut.bind(this), 25, notif, color);
+        var isTransitioning = false;
+        const transitionTimeout = setTimeout((notif => {
+            isTransitioning = true;
+            this.transitionLoop(notif, color);
             this.scr.render();
         }).bind(this), timeout, notif);
+        notif.on('click', () => {
+            clearTimeout(transitionTimeout);
+            this.transitionLoop(notif, color);
+            notif.removeAllListeners('click');
+        });
     }
 
     info(title, desc) {

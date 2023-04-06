@@ -1,4 +1,5 @@
 import bl from 'blessed';
+import hasFlag from 'has-flag';
 import invert from 'invert-color';
 import blc from 'blessed-contrib';
 import randItem from 'random-item';
@@ -17,8 +18,10 @@ class TuiApi extends Api {
 	mymusic;
 	atSongPage;
 	notifs;
+	args;
+	songPageBuilt;
 
-	constructor() {
+	constructor(args = []) {
 		super();
 		this.atSongPage = false;
 		this.loops = {
@@ -28,7 +31,8 @@ class TuiApi extends Api {
 			song: null,
 			songPage: null,
 			spc: {
-				lheader: null
+				lheader: null,
+				centerImg: null
 			},
 			duration: null,
 			collection: null,
@@ -36,14 +40,26 @@ class TuiApi extends Api {
 			collectionItems: []
 		}
 		this.S = S;
+		this.songPageBuilt = false;
+		this.args = args;
+		const arg = this.argParse();
+		if (!arg) process.exit(0);
+	}
+
+	argParse() {
+		if (hasFlag('--help', this.args)) {
+			console.log(this.help);
+			return false;
+		} else {
+			return true;
+		}
 	}
 
 	async close() {
-        this.loaded = false;
+		this.loaded = false;
 		for (const loop in this.loops) {
 			clearInterval(this.loops[loop]);
 		}
-
 		await super.close();
 	}
 
@@ -67,8 +83,6 @@ class TuiApi extends Api {
 		this.boxes.play.style.bg = colors.bg;
 		this.boxes.play.style.fg = colors.fg;
 		this.boxes.songPage.style.fg = colors.fg;
-		this.boxes.spc.lheader.style.fg = colors.fg;
-		this.boxes.spc.lheader.style.border.fg = colors.fg;
 		this.boxes.duration.left = `100%-${duration.length}`;
 
 		this.notifs.checkHide(true);
@@ -83,7 +97,6 @@ class TuiApi extends Api {
 			smartCSR: true
 		});
 		this.scr.enableInput();
-		this.drawSong();
 		this.loops.song = setInterval(this.#songLoop.bind(this), 500);
 		this.scr.key(['escape', 'q', 'C-c'], async () => {
 			await this.close();
@@ -94,19 +107,19 @@ class TuiApi extends Api {
 			await this.drawPlayPause();
 
 		});
-		this.scr.key(['r'], async () => {
+		/*this.scr.key(['r'], async () => {
 			await this.drawCollection();
-		});
+		});*/
+		this.drawSong();
 		this.boxes.song.focus();
 		this.scr.render();
 		this.notifs = new Notifications(this.scr, false);
 		if (this.config.tips) this.notifs.info('Tip', randItem(this.tips));
-		//this.notifs.info('test', 'a reallllllll llllllllllll llllllll lllllllllllll lll llllllll llllll lllllllll lllllll llll lllly lllllll llllllll lllllll lllong nnnn nnnnnnn nnnnnn nnnnnnn notificationnn nnnnnnnnnnnnn nnnnnnnnn nnnnnnnnnnnnnn nnnnnnnnnnnnnnnnn nnnnnnnnnnnnnnnnnnnn nnnnnnnnnnnnnnnnnn nn');
 		await this.drawCollection();
+		this.initKeybind.bind(this)(this.keyHandler.bind(this));
 	}
 	initPlayPause() {
 		this.boxes.play.on('click', async () => {
-			
 			await this.playPause();
 			await this.drawPlayPause();
 		});
@@ -170,29 +183,13 @@ class TuiApi extends Api {
 				fg: 'black'
 			}
 		});
-		this.boxes.spc.lheader = bl.box({
-			top: '5%',
-			left: '10%',
-			width: '10%',
-			height: 5,
-			border: {
-				type: 'line'
-			},
-			style: {
-				bg: 'white',
-				fg: 'black',
-				border: {
-					bg: 'white',
-					fg: 'black'
-				}
-			}
-		})
 		this.hideSongPageBoxes();
-		this.boxes.song.on('click', async () => {
-			await this.drawSongPage();
-		});
+		this.boxes.song.on('click', (async () => {
+			if (this.songPageBuilt === 'inprogress') return;
+			if (!this.songPageBuilt) await this.drawSongPage();
+		}).bind(this));
 		this.initPlayPause();
-		this.boxes.songPage.append(this.boxes.spc.lheader);
+		//this.boxes.songPage.append(this.boxes.spc.lheader);
 		this.scr.append(this.boxes.song);
 		this.scr.append(this.boxes.duration);
 		this.scr.append(this.boxes.play);
@@ -204,18 +201,63 @@ class TuiApi extends Api {
 		console.error(songInfo);
 		if (typeof songInfo === 'object') {
 			console.error(songInfo);
-			return;
 		} else {
-			
+			this.notifs.err('Error', 'Song page could not be loaded');
+			return;
 		}
-		const fg = invert(songInfo.bg, true);
-		this.colorSongPageBoxes()
+		this.buildSongPage(songInfo);
 		this.showSongPageBoxes();
-		this.boxes.songPage.focus();
+		//this.boxes.songPage.focus();
 		this.scr.render();
 	}
-	colorSongPageBoxes(bg, fg) {
-
+	buildSongPage(song) {
+		this.songPageBuilt = 'inprogress';
+		if (song.center) {
+			console.error('img path:', song.center.img);
+			console.error('w3m path:', this.config.w3m);
+			this.boxes.spc.centerImg = bl.image({ // Width can be at a fixed value because all album covers are square on pandora
+				top: '20%',
+				left: 'center',
+				height: '40%',
+				width: '40%',
+				type: 'overlay',
+				file: song.center.img,
+				w3m: this.config.w3m
+			});
+			this.scr.append(this.boxes.spc.centerImg);
+		} else if (song.left) {
+			this.boxes.spc.lheader = bl.box({
+				top: '5%',
+				left: '10%',
+				width: '10%',
+				height: 5,
+				border: {
+					type: 'line'
+				},
+				style: {
+					bg: 'white',
+					fg: 'black',
+					border: {
+						bg: 'white',
+						fg: 'black'
+					}
+				}
+			});
+		}
+		this.colorSongPageBoxes(song.bg);
+		this.songPageBuilt = true;
+	}
+	colorSongPageBoxes(bg) {
+		const fg = invert(bg, true);
+		this.boxes.songPage.style.bg = bg;
+		this.boxes.songPage.style.fg = fg;
+		if (this.boxes.spc.lheader) {
+			this.boxes.spc.lheader.style.fg = colors.fg;
+			this.boxes.spc.lheader.style.border.fg = colors.fg;
+		}
+	}
+	clearSongPage() {
+		// TODO: Remove all boxes in songPage
 	}
 	hideSongPageBoxes() {
 		/*
@@ -231,7 +273,7 @@ class TuiApi extends Api {
 					this.boxes.spc[box][i].hide();
 				}
 			}
-			this.boxes.spc[box].hide();
+			if (this.boxes.spc[box]) this.boxes.spc[box].hide();
 		}
 	}
 	showSongPageBoxes() {
@@ -243,7 +285,7 @@ class TuiApi extends Api {
 					this.boxes.spc[box][i].show();
 				}
 			}
-			this.boxes.spc[box].show();
+			if (this.boxes.spc[box]) this.boxes.spc[box].show();
 		}
 	}
 	makeTransparent() {
