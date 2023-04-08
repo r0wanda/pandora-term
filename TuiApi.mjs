@@ -3,7 +3,8 @@ import hasFlag from 'has-flag';
 import invert from 'invert-color';
 import blc from 'blessed-contrib';
 import randItem from 'random-item';
-import Api from './Api.mjs'
+import Api from './Api.mjs';
+import fix from './fix.mjs';
 import * as S from './selectors.mjs';
 import Notifications from './Notifications.mjs';
 
@@ -42,13 +43,14 @@ class TuiApi extends Api {
 		this.S = S;
 		this.songPageBuilt = false;
 		this.args = args;
-		const arg = this.argParse();
-		if (!arg) process.exit(0);
 	}
 
-	argParse() {
+	async argParse() {
 		if (hasFlag('--help', this.args)) {
 			console.log(this.help);
+			return false;
+		} else if (hasFlag('--fix', this.args)) {
+			await fix(this.udd);
 			return false;
 		} else {
 			return true;
@@ -92,6 +94,8 @@ class TuiApi extends Api {
 
 	// Init functions
 	async init() {
+		const arg = await this.argParse();
+		if (!arg) process.exit(0);
 		await super.init();
 		this.scr = bl.screen({
 			smartCSR: true

@@ -54,7 +54,8 @@ export const XVFB_OPTS = {
 }
 export const ICONS = {
 	PLAY: '▶',
-	PAUSE: '⏸'
+	PAUSE: '⏸',
+	INFO: 'ℹ️'
 }
 
 export const ERRS = {

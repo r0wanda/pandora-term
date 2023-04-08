@@ -32,7 +32,7 @@ class HTTP extends RPC {
 
     #exRm(path) {
         try {
-            if (ex(path)) rm(path);
+            rm(path);
         } catch (err) {
             if (err.path && ex(err.path)) {
                 console.log(ch.redBright(

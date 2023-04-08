@@ -1,4 +1,4 @@
-OPTIONS ARE NOT IMPLEMENTED YET (excluding --help)
+OPTIONS ARE NOT FULLY IMPLEMENTED YET
 
 Usage: pandora-term [options]
 

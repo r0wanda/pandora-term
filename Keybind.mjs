@@ -1,4 +1,3 @@
-import fkill from 'fkill';
 import GKM from 'gkm-class';
 import pgrep from 'find-process';
 
@@ -22,8 +21,9 @@ class Keybind extends GKM {
 	 * @returns {Promise<void>}
 	 */
 	async initKeybind(handler) {
+		try {
 		const pressed = [];
-		this.events.on('key.*', function (data) { // Responds to any keypress and any key-release
+		this.on('key.*', function (data) { // Responds to any keypress and any key-release
 			data = data[0];
 			switch (this.event) {
 				case 'key.pressed': {
@@ -47,6 +47,10 @@ class Keybind extends GKM {
 		});
 		this.int = setInterval(handler, 50, pressed);
 		if (this.notifs) this.notifs.info('GKM', 'Global keybinds initialized');
+		} catch (err) {
+			console.error(err);
+			if (this.notifs) this.notifs.err('GKM', 'Global keybinds failed to initialize, check logfile');
+		}
 	}
 
 	async pgrep(cmd) {

@@ -33,6 +33,16 @@ Run in pandora-term folder
 sh install.sh
 ```
 
+## Performance
+*All tests are ran on my computer*
+
+* RAM usage before Pandora-term start: 6.02GB/16GB
+* Swap usage before: 0K
+* Ram usage after: 6.52GB/16GB
+* Swap usage after: 0K
+
+It should be noted that CPU usage goes up considerably.
+
 ## Related projects
 * [Spotify-TUI](https://github.com/Rigellute/spotify-tui)
 
