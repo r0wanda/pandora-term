@@ -26,7 +26,7 @@
     "collection_timeout": 30000,
 
     "w3m": "/usr/lib/w3m/w3mimgdisplay",
-    "tmp": "/tmp",
+    "tmp": "./tmp",
     "logfile": "errfile",
     "tips": true
 }

@@ -11,6 +11,7 @@
         "You can make the app transparent by hitting the T key, or by configuring it in `config.json`",
         "This app is designed to add features to pandora, not to be lightweight. You can use other apps like Pithos for a more lightweight app.",
         "You can turn off these tips in `config.json` if you want to.",
+        "You can click these notifications to make them go away early.",
         "`Execution context was destroyed` errors are normal occasionally on startup, but if they are happening often, submit an issue on Github.",
         "This app doesn't steal your information, but don't take my word for it and look through the open-source code if you're suspicious."
     ]

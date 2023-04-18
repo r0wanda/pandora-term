@@ -16,7 +16,8 @@ class HTTP extends RPC {
     constructor() {
         super(RPC.getAppID());
         this.files = [];
-        this.config = JSON.parse(rf(path.join(this.dirname, 'config.json')));
+        this.configPath = path.join(this.dirname, 'config.json');
+        this.config = JSON.parse(rf(this.configPath));
         this.tips = JSON.parse(rf(path.join(this.dirname, 'tips.json'))).tips;
         this.help = rf(path.join(this.dirname, 'help.txt'), 'utf8');
     }
@@ -35,10 +36,15 @@ class HTTP extends RPC {
             rm(path);
         } catch (err) {
             if (err.path && ex(err.path)) {
-                console.log(ch.redBright(
+                console.error(ch.redBright(
                     `WARNING: During cleanup, ${err.path} was not deleted due to error '${err.code}'`
                 ));
             }
+        }
+        if (ex(path)) {
+            console.error(ch.redBright(
+                `WARNING: During cleanup, ${path} was not deleted`
+            ));
         }
     }
     /**
@@ -48,7 +54,7 @@ class HTTP extends RPC {
     async close() {
         await super.close();
         for (const file of this.files) {
-            this.#exRm(path);
+            this.#exRm(file);
         }
     }
 

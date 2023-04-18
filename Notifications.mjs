@@ -10,8 +10,10 @@ class Notifications {
     notifs;
     totalHeight;
     transparent;
+    cyan;
 
     constructor(scr, transparent = false) {
+        this.cyan = '#00A0FF';
         this.scr = scr;
         this.transparent = transparent;
 
@@ -127,7 +129,7 @@ class Notifications {
     }
 
     info(title, desc) {
-        this.msg(title, desc, '#00A0FF');
+        this.msg(title, desc, this.cyan);
     }
     warn(title, desc) {
         this.msg(title, desc, 'yellow');

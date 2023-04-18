@@ -21,7 +21,7 @@ const box = bl.image({
     width: '40%',
     height: '40%',
     type: 'overlay',
-    file: '/tmp/GNrgsZBAT.png',
+    file: 'tmp/15tG7jbq6.png',
     w3m: '/usr/lib/w3m/w3mimgdisplay'
 });
 /*const box = bl.box({

@@ -22,31 +22,31 @@ class Keybind extends GKM {
 	 */
 	async initKeybind(handler) {
 		try {
-		const pressed = [];
-		this.on('key.*', function (data) { // Responds to any keypress and any key-release
-			data = data[0];
-			switch (this.event) {
-				case 'key.pressed': {
-					if (!pressed.includes(data)) {
-						pressed.push(data);
+			const pressed = [];
+			this.on('key.*', function (data) { // Responds to any keypress and any key-release
+				data = data[0];
+				switch (this.event) {
+					case 'key.pressed': {
+						if (!pressed.includes(data)) {
+							pressed.push(data);
+						}
+
+						break;
 					}
 
-					break;
-				}
+					case 'key.released': {
+						if (pressed.includes(data)) {
+							pressed.splice(pressed.indexOf(data));
+						}
 
-				case 'key.released': {
-					if (pressed.includes(data)) {
-						pressed.splice(pressed.indexOf(data));
+						break;
 					}
 
-					break;
+					default:
 				}
-
-				default:
-			}
-		});
-		this.int = setInterval(handler, 50, pressed);
-		if (this.notifs) this.notifs.info('GKM', 'Global keybinds initialized');
+			});
+			this.int = setInterval(handler, 50, pressed);
+			if (this.notifs) this.notifs.info('GKM', 'Global keybinds initialized');
 		} catch (err) {
 			console.error(err);
 			if (this.notifs) this.notifs.err('GKM', 'Global keybinds failed to initialize, check logfile');

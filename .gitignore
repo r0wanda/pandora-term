@@ -10,3 +10,5 @@ collection.json
 img.sh
 test/test.png
 errfile
+tmp
+tmp/*

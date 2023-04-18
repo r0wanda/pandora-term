@@ -6,6 +6,7 @@ import randItem from 'random-item';
 import Api from './Api.mjs';
 import fix from './fix.mjs';
 import * as S from './selectors.mjs';
+import ConfigEdit from './ConfigEdit.mjs';
 import Notifications from './Notifications.mjs';
 
 // Graphic design is my passion
@@ -52,6 +53,9 @@ class TuiApi extends Api {
 		} else if (hasFlag('--fix', this.args)) {
 			await fix(this.udd);
 			return false;
+		} else if (hasFlag('--config', this.args)) {	
+			const conf = new ConfigEdit();
+			await conf.run(this.configPath);
 		} else {
 			return true;
 		}
@@ -111,9 +115,9 @@ class TuiApi extends Api {
 			await this.drawPlayPause();
 
 		});
-		/*this.scr.key(['r'], async () => {
+		this.scr.key(['f5'], async () => {
 			await this.drawCollection();
-		});*/
+		});
 		this.drawSong();
 		this.boxes.song.focus();
 		this.scr.render();
@@ -132,8 +136,93 @@ class TuiApi extends Api {
 	// Draw functions (exlcuding loops)
 	async drawCollection() {
 		await this.fetchCollection();
-		if (!this.mymusic) return;
-		this.boxes.collection = bl.box();
+		if (!this.mymusic) {
+			this.notifs.err('Collection', 'Collection was not loaded, press F5 to try again');
+			return;
+		}
+		console.error(this.mymusic);
+		this.boxes.collectionItems = [];
+		for (var item of this.mymusic) {
+			const imgtest = bl.image({
+				top: 10,
+				left: 10,
+				height: 8,
+				width: 'shrink',
+				type: 'overlay',
+				file: item.img
+			});
+			this.scr.append(imgtest);
+			var textBoxes = [];
+			if (item.first.content !== '') {
+				textBoxes.push(bl.box({
+					top: 0,
+					width: item.first.content.length,
+					height: 1,
+					content: item.first.content.replace(/{/g, '\{').replace(/}/g, '\}')
+				}));
+			}
+			if (item.second.content !== '') {
+				textBoxes.push(bl.box({
+					top: 1,
+					width: item.second.content.length,
+					height: 1,
+					content: item.second.content.replace(/{/g, '\{').replace(/}/g, '\}')
+				}));
+			}
+			if (item.third.exists) {
+				textBoxes.push(bl.box({
+					top: 2,
+					width: item.third.content.length,
+					height: 1,
+					content: `${item.third.content.replace(/{/g, '\{').replace(/}/g, '\}')}${
+						item.third.explicit ? `{red-fg}${S.ICONS.EXPLICIT}{/}` : ''
+					}${
+						item.third.clean ? `{gray-fg}${S.ICONS.CLEAN}{/}` : ''
+					}`,
+					tags: true
+				}));
+			}
+			this.boxes.collectionItems.push(bl.box({
+				top: 0,
+				width: '25%',
+				height: 20,
+				border: {
+					type: 'line'
+				},
+				style: {
+					border: {
+						fg: this.notifs.cyan
+					}
+				},
+				children: [
+					...textBoxes,
+					bl.image({
+						height: 8,
+						width: 'shrink',
+						type: 'overlay',
+						file: item.img
+					})
+				]
+			}));
+			break;
+		}
+		this.boxes.collection = bl.box({
+			top: 1,
+			left: 0,
+			border: {
+				type: 'line'
+			},
+			style: {
+				border: {
+					fg: this.notifs.cyan
+				}
+			},
+			width: '100%',
+			height: '100%-2',
+			children: this.boxes.collectionItems
+		});
+		this.scr.append(this.boxes.collection);
+		this.scr.render();
 	}
 	async drawPlayPause() {
 		const playPaused = await this.getPlayPause() ? S.ICONS.PAUSE : S.ICONS.PLAY; // If the song is playing, the pause button should be shown
