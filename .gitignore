@@ -12,3 +12,6 @@ test/test.png
 errfile
 tmp
 tmp/*
+cpp/ansi
+.vscode
+.vscode/*

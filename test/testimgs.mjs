@@ -21,9 +21,17 @@ const box = bl.image({
     width: '40%',
     height: '40%',
     type: 'overlay',
-    file: 'tmp/15tG7jbq6.png',
+    file: 'test.png',
     w3m: '/usr/lib/w3m/w3mimgdisplay'
 });
+console.log(box);
+const parent = bl.box({
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    children: [box]
+})
 /*const box = bl.box({
     top: 0,
     left: 0,
@@ -32,6 +40,8 @@ const box = bl.image({
     height: 50,
     content: await img.default('./test.png', 100, 50, 1)
 });*/
+box.focus();
+box.renderImage();
 scr.append(box);
 scr.render();
 //console.log(await img.default('./test.png', process.stdout.rows * 2.5));

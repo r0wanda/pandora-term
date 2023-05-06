@@ -1,13 +1,16 @@
 import bl from 'blessed';
+import ww from 'word-wrap';
 import hasFlag from 'has-flag';
 import invert from 'invert-color';
 import blc from 'blessed-contrib';
 import randItem from 'random-item';
+import AnsiImg from './AnsiImg.mjs';
 import Api from './Api.mjs';
 import fix from './fix.mjs';
 import * as S from './selectors.mjs';
 import ConfigEdit from './ConfigEdit.mjs';
 import Notifications from './Notifications.mjs';
+import { execSync as exec } from 'node:child_process';
 
 // Graphic design is my passion
 
@@ -22,9 +25,11 @@ class TuiApi extends Api {
 	notifs;
 	args;
 	songPageBuilt;
+	ansi;
 
 	constructor(args = []) {
 		super();
+		this.ansi = new AnsiImg();
 		this.atSongPage = false;
 		this.loops = {
 			song: null
@@ -82,14 +87,20 @@ class TuiApi extends Api {
 		this.boxes.duration.setContent(duration);
 		await this.drawPlayPause();
 
-		this.boxes.song.style.bg = colors.bg;
-		this.boxes.song.style.fg = colors.fg;
-		this.boxes.duration.style.bg = colors.bg;
-		this.boxes.duration.style.fg = colors.fg;
-		this.boxes.play.style.bg = colors.bg;
-		this.boxes.play.style.fg = colors.fg;
-		this.boxes.songPage.style.fg = colors.fg;
-		this.boxes.duration.left = `100%-${duration.length}`;
+		try {
+			this.boxes.song.style.bg = colors.bg;
+			this.boxes.song.style.fg = colors.fg;
+			this.boxes.duration.style.bg = colors.bg;
+			this.boxes.duration.style.fg = colors.fg;
+			this.boxes.play.style.bg = colors.bg;
+			this.boxes.play.style.fg = colors.fg;
+			this.boxes.songPage.style.fg = colors.fg;
+			this.boxes.duration.left = `100%-${duration.length}`;
+			this.boxes.collection.style.border.fg = colors.bg;
+			for (var box of this.boxes.collectionItems) {
+				box.style.border.fg = colors.bg;
+			}
+		} catch {};
 
 		this.notifs.checkHide(true);
 
@@ -121,7 +132,7 @@ class TuiApi extends Api {
 		this.drawSong();
 		this.boxes.song.focus();
 		this.scr.render();
-		this.notifs = new Notifications(this.scr, false);
+		this.notifs = new Notifications(this.scr, true);
 		if (this.config.tips) this.notifs.info('Tip', randItem(this.tips));
 		await this.drawCollection();
 		this.initKeybind.bind(this)(this.keyHandler.bind(this));
@@ -131,6 +142,15 @@ class TuiApi extends Api {
 			await this.playPause();
 			await this.drawPlayPause();
 		});
+	}
+
+	/**
+	 * Sanitize content for blessed.js
+	 * @param {string} str The string to be sanitized
+	 * @returns {string} the sanitized content
+	 */
+	sanitizeContent(str) {
+		return str.replace(/{/g, '\{').replace(/}/g, '\}');
 	}
 
 	// Draw functions (exlcuding loops)
@@ -143,22 +163,21 @@ class TuiApi extends Api {
 		console.error(this.mymusic);
 		this.boxes.collectionItems = [];
 		for (var item of this.mymusic) {
-			const imgtest = bl.image({
+			/*const imgtest = bl.image({
 				top: 10,
 				left: 10,
 				height: 8,
-				width: 'shrink',
+				width: 8,
 				type: 'overlay',
 				file: item.img
-			});
-			this.scr.append(imgtest);
+			});*/
 			var textBoxes = [];
 			if (item.first.content !== '') {
 				textBoxes.push(bl.box({
 					top: 0,
 					width: item.first.content.length,
 					height: 1,
-					content: item.first.content.replace(/{/g, '\{').replace(/}/g, '\}')
+					content: this.sanitizeContent(item.first.content)
 				}));
 			}
 			if (item.second.content !== '') {
@@ -166,25 +185,27 @@ class TuiApi extends Api {
 					top: 1,
 					width: item.second.content.length,
 					height: 1,
-					content: item.second.content.replace(/{/g, '\{').replace(/}/g, '\}')
+					content: this.sanitizeContent(item.second.content)
 				}));
 			}
 			if (item.third.exists) {
+				var content = `${this.sanitizeContent(item.third.content)}${
+					item.third.explicit ? ` {red-fg}${S.ICONS.EXPLICIT}{/}` : ''
+				}${
+					item.third.clean ? `{gray-fg}${S.ICONS.CLEAN}{/}` : ''
+				}`;
+				var bound; 
 				textBoxes.push(bl.box({
 					top: 2,
 					width: item.third.content.length,
 					height: 1,
-					content: `${item.third.content.replace(/{/g, '\{').replace(/}/g, '\}')}${
-						item.third.explicit ? `{red-fg}${S.ICONS.EXPLICIT}{/}` : ''
-					}${
-						item.third.clean ? `{gray-fg}${S.ICONS.CLEAN}{/}` : ''
-					}`,
+					content,
 					tags: true
 				}));
 			}
 			this.boxes.collectionItems.push(bl.box({
 				top: 0,
-				width: '25%',
+				width: '20%',
 				height: 20,
 				border: {
 					type: 'line'
@@ -194,15 +215,7 @@ class TuiApi extends Api {
 						fg: this.notifs.cyan
 					}
 				},
-				children: [
-					...textBoxes,
-					bl.image({
-						height: 8,
-						width: 'shrink',
-						type: 'overlay',
-						file: item.img
-					})
-				]
+				children: textBoxes
 			}));
 			break;
 		}
@@ -308,14 +321,13 @@ class TuiApi extends Api {
 		if (song.center) {
 			console.error('img path:', song.center.img);
 			console.error('w3m path:', this.config.w3m);
-			this.boxes.spc.centerImg = bl.image({ // Width can be at a fixed value because all album covers are square on pandora
+			this.boxes.spc.centerImg = bl.box({ // Width can be at a fixed value because all album covers are square on pandora
 				top: '20%',
 				left: 'center',
 				height: '40%',
-				width: '40%',
+				width: 'shrink',
 				type: 'overlay',
-				file: song.center.img,
-				w3m: this.config.w3m
+				content: this.ansi.ansi(song.center.img, '40%', 'w')
 			});
 			this.scr.append(this.boxes.spc.centerImg);
 		} else if (song.left) {

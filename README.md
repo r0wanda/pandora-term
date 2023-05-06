@@ -13,35 +13,29 @@ A TUI interface for Pandora (the music streaming service)
     git clone https://github.com/Cookey-Dev/pandora-term.git
     cd pandora-term
     ```
-* X11 and xvfb
+* X11, xvfb, and libsixel
 
     Arch:
     ```sh
-    sudo pacman -S xorg xvfb
+    sudo pacman -S xorg xvfb libsixel
     ```
     Debian/Ubuntu:
     ```sh
     # Didn't actually test this
-    sudo apt install xorg xvfb
+    sudo apt install xorg xvfb img2sixel x11-utils
     ```
 * Node.js
     - Install nvm (optional) ([Link](https://github.com/nvm-sh/nvm#installing-and-updating))
     - Install yarn ([Link](https://yarnpkg.com/getting-started/install))
+* A terminal emulator
+
+    The terminal emulator must support **truecolor**, **sixel**, and **unicode/emojis**.
+    Examples include: [UXTerm](https://invisible-island.net/xterm/), [Alacritty-sixel](https://github.com/microo8/alacritty-sixel) (which I use), and others (which you can find at [arewesixelyet](https://www.arewesixelyet.com/).)
 ## Run the install check
 Run in pandora-term folder
 ```sh
 sh install.sh
 ```
-
-## Performance
-*All tests are ran on my computer*
-
-* RAM usage before Pandora-term start: 6.02GB/16GB
-* Swap usage before: 0K
-* Ram usage after: 6.52GB/16GB
-* Swap usage after: 0K
-
-It should be noted that CPU usage goes up considerably.
 
 ## Related projects
 * [Spotify-TUI](https://github.com/Rigellute/spotify-tui)
