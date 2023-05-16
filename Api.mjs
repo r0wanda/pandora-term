@@ -222,10 +222,7 @@ class Api extends HTTP {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.TITLE));
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('getSong'));
-			} else console.error(err);
+			this.handleError(err, 'getSong');
 			return null;
 		}
 	}
@@ -238,10 +235,7 @@ class Api extends HTTP {
 		try {
 			return decodeHTML(await this.query2html(S.SONG.ARTIST));
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('getArtist'));
-			} else console.error(err);
+			this.handleError(err, 'getArtist');
 			return null;
 		}
 	}
@@ -257,10 +251,7 @@ class Api extends HTTP {
 			const template = `${elapsed} | ${remaining} `;
 			return template;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('getDuration'));
-			} else console.error(err);
+			this.handleError(err, 'getDuration');
 			return null;
 		}
 	}
@@ -293,16 +284,14 @@ class Api extends HTTP {
 				fg,
 			};
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('getColors'));
-			} else console.error(err);
+			this.handleError(err, 'getColors');
 			return {
 				bg: 'white',
 				fg: 'black',
 			};
 		}
 	}
+
 	/**
 	 * Get song play-pause state
 	 * @returns {Promise<boolean>} False for paused, True for play
@@ -311,10 +300,30 @@ class Api extends HTTP {
 		try {
 			return await this.page.$(S.SONG.PAUSE) ?? false;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('getPlayPause'));
-			} else console.error(err);
+			this.handleError(err, 'getPlayPause');
+			return false;
+		}
+	}
+
+	/**
+	 * Get existing buttons
+	 * @returns {Promise<object>} An object containing true/false values representing each button's existance
+	 */
+	async getButtons() {
+		try {
+			return await this.page.evaluate(S => {
+				return {
+					skip: (document.querySelector(S.SKIP) || document.querySelector(S.SKIP2)) !== null,
+					rewind: document.querySelector(S.REWIND) !== null,
+					replay: document.querySelector(S.REPLAY) !== null,
+					thumbs: {
+						up: document.querySelector(S.THUMBS.UP) !== null,
+						down: document.querySelector(S.THUMBS.DOWN) !== null
+					}
+				}
+			}, S.SONG);
+		} catch (err) {
+			this.handleError(err, 'getButtons');
 			return false;
 		}
 	}
@@ -337,22 +346,58 @@ class Api extends HTTP {
 	async playPause() {
 		try {
 			console.error('playpausing')
-			if (
-				this.page.isClosed() ||
-				this.keybinds.playPause ||
-				(!await this.page.$(S.SONG.PLAY) && !this.page.$(S.SONG.PAUSE))
-			) return;
 			await this.page.evaluate(S => {
-				(document.querySelector(S.SONG.PLAY) ?? document.querySelector(S.SONG.PAUSE)).click();
-			}, S);
+				(document.querySelector(S.PLAY) ?? document.querySelector(S.PAUSE)).click();
+			}, S.SONG);
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('playPause'));
-			} else console.error(err);
+			this.handleError(err, 'playPause');
 			return;
 		}
 	}
+
+	/**
+	 * Skip function
+	 * @returns {Promise<void>
+	 */
+	async skip() {
+		try {
+			console.error('skip')
+			await this.page.evaluate(S => {
+				(document.querySelector(S.SKIP) ?? document.querySelector(S.SKIP2)).click();
+			}, S.SONG);
+		} catch (err) {
+			this.handleError(err, 'skip');
+			return;
+		}
+	}
+
+	/**
+	 * Rewind/Replay function
+	 * @returns {Promise<void>}
+	 */
+	async rewind() {
+		try {
+			console.error('rewind');
+			await this.page.evaluate(S => {
+				(document.querySelector(S.REWIND) ?? document.querySelector(S.REPLAY)).click();
+			}, S.SONG);
+		} catch (err) {
+			this.handleError(err, 'rewind');
+			return;
+		}
+	}
+	async repeat() {
+		try {
+			console.error('repeat');
+			await this.page.evaluate(S => {
+				(document.querySelector(S.REWIND) ?? document.querySelector(S.REPLAY)).click();
+			}, S.SONG);
+		} catch (err) {
+			this.handleError(err, 'repeat');
+			return;
+		}
+	}
+	
 
 	/**
 	 * @typedef {Object} CollectionItem
@@ -423,6 +468,7 @@ class Api extends HTTP {
 					for (const child of infiniteGrid.children) {
 						const res = {
 							img: S.PLACEHOLDER,
+							play: cssPath(child) + S.MYMUSIC.ITEM_PLAY,
 							first: {
 								elem: '',
 								link: true,
@@ -484,10 +530,27 @@ class Api extends HTTP {
 			}, S);
 			return grid;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('collection'));
-			} else console.error(err);
+			this.handleError(err, 'collection');
+		}
+	}
+
+	/**
+	 * Play a collection item
+	 * @param {object} item The collection item
+	 * @returns {Promise<void>}
+	 */
+	async playCollectionItem(item) {
+		try {
+			console.error("item: " + item.play);
+			const elem = await this.page.$(item.play);
+			await elem.hover();
+			await this.page.screenshot({
+				path: './item.png'
+			});
+			await elem.click();
+			console.error(this.query2html(item.play));
+		} catch (err) {
+			this.handleError(err, 'playCollectionItem');
 		}
 	}
 
@@ -565,11 +628,14 @@ class Api extends HTTP {
 			}
 			return songpage;
 		} catch (err) {
-			if (S.ERRS.CLOSED(err)) {
-				this.#closeCount++;
-				console.error(S.ERRS.CLOSED_MSG('songPage'));
-			} else console.error(err);
+			this.handleError(err, 'songpage');
 		}
+	}
+	handleError(err, func) {
+		if (S.ERRS.CLOSED(err)) {
+			this.#closeCount++;
+			console.error(S.ERRS.CLOSED_MSG(func));
+		} else console.error(err);
 	}
 }
 

@@ -13,5 +13,6 @@ errfile
 tmp
 tmp/*
 cpp/ansi
+cpp/xkey
 .vscode
 .vscode/*

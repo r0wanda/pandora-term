@@ -26,6 +26,7 @@ class TuiApi extends Api {
 	args;
 	songPageBuilt;
 	ansi;
+	buttons;
 
 	constructor(args = []) {
 		super();
@@ -44,11 +45,13 @@ class TuiApi extends Api {
 			duration: null,
 			collection: null,
 			play: null,
+			skip: null,
 			collectionItems: []
 		}
 		this.S = S;
 		this.songPageBuilt = false;
 		this.args = args;
+		this.buttons = {};
 	}
 
 	async argParse() {
@@ -58,7 +61,7 @@ class TuiApi extends Api {
 		} else if (hasFlag('--fix', this.args)) {
 			await fix(this.udd);
 			return false;
-		} else if (hasFlag('--config', this.args)) {	
+		} else if (hasFlag('--config', this.args)) {
 			const conf = new ConfigEdit();
 			await conf.run(this.configPath);
 		} else {
@@ -76,35 +79,39 @@ class TuiApi extends Api {
 
 	// Loops
 	async #songLoop() {
-		const song = await this.getSong() ?? 'Loading';
-		const artist = await this.getArtist() ?? 'Loading';
-		const colors = await this.getColors();
-		const duration = await this.getDuration() ?? 'Buffering';
-		var template = `${artist} - ${song} - Pandora`;
-		this.scr.title = template;
-		template = ` {bold}${song}{/bold} | ${artist}`;
-		this.boxes.song.setContent(template);
-		this.boxes.duration.setContent(duration);
-		await this.drawPlayPause();
-
 		try {
-			this.boxes.song.style.bg = colors.bg;
-			this.boxes.song.style.fg = colors.fg;
-			this.boxes.duration.style.bg = colors.bg;
-			this.boxes.duration.style.fg = colors.fg;
-			this.boxes.play.style.bg = colors.bg;
-			this.boxes.play.style.fg = colors.fg;
+			const song = await this.getSong() ?? 'Loading';
+			const artist = await this.getArtist() ?? 'Loading';
+			const colors = await this.getColors();
+			const duration = await this.getDuration() ?? 'Buffering';
+			var template = `${artist} - ${song} - Pandora`;
+			this.scr.title = template;
+			template = ` {bold}${song}{/bold} | ${artist}`;
+			this.boxes.song.setContent(template);
+			this.boxes.duration.setContent(duration);
+			await this.drawPlayPause();
 			this.boxes.songPage.style.fg = colors.fg;
 			this.boxes.duration.left = `100%-${duration.length}`;
 			this.boxes.collection.style.border.fg = colors.bg;
-			for (var box of this.boxes.collectionItems) {
-				box.style.border.fg = colors.bg;
+			for (var key of ['song', 'duration', 'play', 'skip']) {
+				try {
+					this.boxes[key].style.bg = colors.bg;
+					this.boxes[key].style.fg = colors.fg;
+				} catch {};
 			}
+			for (var box of this.boxes.collectionItems) {
+				try {
+					box.style.border.fg = colors.bg;
+				} catch {};
+			}
+
+			this.notifs.checkHide(true);
+
+			this.scr.render();
+
+			await this.updateButtons();
+			this.scr.render();
 		} catch {};
-
-		this.notifs.checkHide(true);
-
-		this.scr.render();
 	}
 
 	// Init functions
@@ -129,7 +136,7 @@ class TuiApi extends Api {
 		this.scr.key(['f5'], async () => {
 			await this.drawCollection();
 		});
-		this.drawSong();
+		await this.drawSong();
 		this.boxes.song.focus();
 		this.scr.render();
 		this.notifs = new Notifications(this.scr, true);
@@ -137,10 +144,13 @@ class TuiApi extends Api {
 		await this.drawCollection();
 		this.initKeybind.bind(this)(this.keyHandler.bind(this));
 	}
-	initPlayPause() {
+	initButtons() {
 		this.boxes.play.on('click', async () => {
 			await this.playPause();
 			await this.drawPlayPause();
+		});
+		this.boxes.skip.on('click', async () => {
+			await this.skip();
 		});
 	}
 
@@ -189,12 +199,10 @@ class TuiApi extends Api {
 				}));
 			}
 			if (item.third.exists) {
-				var content = `${this.sanitizeContent(item.third.content)}${
-					item.third.explicit ? ` {red-fg}${S.ICONS.EXPLICIT}{/}` : ''
-				}${
-					item.third.clean ? `{gray-fg}${S.ICONS.CLEAN}{/}` : ''
-				}`;
-				var bound; 
+				var content = `${this.sanitizeContent(item.third.content)}${item.third.explicit ? ` {red-fg}${S.ICONS.EXPLICIT}{/}` : ''
+					}${item.third.clean ? `{gray-fg}${S.ICONS.CLEAN}{/}` : ''
+					}`;
+				var bound;
 				textBoxes.push(bl.box({
 					top: 2,
 					width: item.third.content.length,
@@ -203,7 +211,7 @@ class TuiApi extends Api {
 					tags: true
 				}));
 			}
-			this.boxes.collectionItems.push(bl.box({
+			var box = bl.box({
 				top: 0,
 				width: '20%',
 				height: 20,
@@ -216,7 +224,11 @@ class TuiApi extends Api {
 					}
 				},
 				children: textBoxes
-			}));
+			});
+			box.on('click', async () => {
+				this.playCollectionItem(item);
+			});
+			this.boxes.collectionItems.push(box);
 			break;
 		}
 		this.boxes.collection = bl.box({
@@ -242,7 +254,7 @@ class TuiApi extends Api {
 		this.boxes.play.setContent(playPaused);
 		this.scr.render();
 	}
-	drawSong() {
+	async drawSong() {
 		this.boxes.song = bl.box({
 			top: '100%-1',
 			left: 'center',
@@ -279,6 +291,7 @@ class TuiApi extends Api {
 				fg: 'black'
 			}
 		});
+		await this.loadButtons();
 		this.boxes.songPage = bl.box({
 			top: 0,
 			left: 'center',
@@ -294,12 +307,33 @@ class TuiApi extends Api {
 			if (this.songPageBuilt === 'inprogress') return;
 			if (!this.songPageBuilt) await this.drawSongPage();
 		}).bind(this));
-		this.initPlayPause();
+		this.initButtons();
 		//this.boxes.songPage.append(this.boxes.spc.lheader);
 		this.scr.append(this.boxes.song);
 		this.scr.append(this.boxes.duration);
 		this.scr.append(this.boxes.play);
+		this.scr.append(this.boxes.skip);
 		this.scr.append(this.boxes.songPage);
+	}
+	async loadButtons() {
+		const buttons = await this.getButtons();
+		console.error(buttons);
+		if (buttons.skip) this.boxes.skip = bl.button({
+			top: '100%-1',
+			left: 'center+2',
+			width: 1,
+			height: 1,
+			content: S.ICONS.SKIP,
+			style: {
+				bg: 'white',
+				fg: 'black'
+			}
+		});
+		this.buttons = buttons;
+	}
+	async updateButtons() {
+		const buttons = await this.getButtons();
+		if (buttons !== this.buttons) await this.loadButtons();
 	}
 	async drawSongPage() {
 		this.atSongPage = true;
@@ -324,9 +358,8 @@ class TuiApi extends Api {
 			this.boxes.spc.centerImg = bl.box({ // Width can be at a fixed value because all album covers are square on pandora
 				top: '20%',
 				left: 'center',
-				height: '40%',
-				width: 'shrink',
-				type: 'overlay',
+				height: this.ansi.hPerProp(40),
+				width: '40%+1',
 				content: this.ansi.ansi(song.center.img, '40%', 'w')
 			});
 			this.scr.append(this.boxes.spc.centerImg);

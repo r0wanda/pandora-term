@@ -31,7 +31,14 @@ export const SONG = {
 	PLAY: 'button[data-qa="play_button"]',
 	PAUSE: 'button[data-qa="pause_button"]',
 	SKIP: 'button[data-qa="t3_skip_forward_button"]',
-	REWIND: 'button[data-qa="t3_skip_back_button"]'
+	SKIP2: 'button[data-qa="skip_button"]',
+	REWIND: 'button[data-qa="t3_skip_back_button"]',
+	REPLAY: 'button[data-qa="replay_button"]',
+	REPEAT: 'button[data-qa="tuner_repeat_button"]',
+	THUMBS: {
+		UP: 'button[data-qa="thumbs_up_button"]',
+		DOWN: 'button[data-qa="thumbs_down_button"]'
+	}
 }
 export const MYMUSIC = {
 	COLLECTION: 'a[data-qa="header_my_stations_link"]',
@@ -41,7 +48,8 @@ export const MYMUSIC = {
 	ITEM_SECOND: 'div.GridItem > div.GridItem__metaInfo > div.GridItem__caption > div.GridItem__caption__second',
 	ITEM_THIRD: 'div.GridItem > div.GridItem__metaInfo > div.GridItem__caption > div.GridItem__caption__third',
 	ITEM_THIRD_TXT: 'span.GridItem__caption__text',
-	ITEM_THIRD_E: 'div.Badge > div.Badge__text'
+	ITEM_THIRD_E: 'div.Badge > div.Badge__text',
+	ITEM_PLAY: ' > div.GridItem > div.GridItem__thumbnail > div.SourceCard > div.SourceCard__trigger > div.GridItem__thumbnail__content > button[data-qa="hover_menu_play_station_button"]'
 }
 export const PLACEHOLDER = 'https://via.placeholder.com/500x500.png?text=?';
 export const MUTE = ['--mute-audio'];
@@ -55,6 +63,16 @@ export const XVFB_OPTS = {
 export const ICONS = {
 	PLAY: '▶',
 	PAUSE: '⏸',
+	SKIP: '⏭',
+	REWIND: '⏮',
+	REPLAY: '↩',
+	REPLAY_ALT: '🔁',
+	THUMBS: {
+		UP: '👍',
+		DOWN: '👎',
+		UP_ALT: '🖒',
+		DOWN_ALT: '🖓'
+	},
 	INFO: 'ℹ️',
 	EXPLICIT: '🅴',
 	CLEAN: '🅲'

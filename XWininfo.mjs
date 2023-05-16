@@ -36,6 +36,12 @@ class XWininfo extends Screen {
     propH(w) {
         return Math.round(w * this.pixelW / this.pixelH);
     }
+    wPerProp(h) {
+        return this.propW(this.hPer(h));
+    }
+    hPerProp(w) {
+        return this.propH(this.wPer(w));
+    }
 	
     /**
      * Parse raw output of xwininfo

@@ -14,6 +14,10 @@
         "play_pause": ["Pause"],
         "play_pause_exclude": ["Meta"]
     },
+    "tui": {
+        "alt_icons": false,
+        "transparent": true
+    },
 
     "_screenshot_path_comment": "Changing this to /tmp/scr.png is ideal, but can also break things",
     "screenshot_path": "scr.png",
