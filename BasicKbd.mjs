@@ -1,0 +1,67 @@
+import ch from 'chalk';
+import inq from 'inquirer';
+import Input from 'input-event';
+import { readdirSync as rds } from 'node:fs';
+import { fromCode as keys } from 'linux-keycodes';
+import Config from './Config.mjs';
+
+class BasicKbd extends Config {
+    kbd;
+    kbdPath;
+    constructor() {
+        super();
+        this.kbd = false;
+        this.kbdPath = false;
+    }
+    async init() {
+        if (!this.config.kbd) await this.selectKbd();
+    }
+    listDevs(all, trim) {
+        var oDevs = rds('/dev/input/by-id');
+        oDevs = [...new Set(oDevs)];
+        var devs = [...oDevs];
+        if (!all) oDevs = devs = devs.filter(d => d.includes('-kbd'));
+        if (trim) devs = devs.map(d => d.replace(/usb-|event-/g, '').replace(/-kbd/g, '').replace(/_/g, ' '));
+        return [oDevs, devs];
+    }
+    async selectKbd(all = false, trim = true) {
+        const devs = this.listDevs(all, trim);
+        const choice = await inq.prompt([
+            {
+                type: 'list',
+                name: 'kbd',
+                message: 'Select your keyboard (if unsure pick the first one)',
+                choices: [
+                    ...devs[1],
+                    'Show full names',
+                    'Show non-keyboards'
+                ]
+            }
+        ]);
+        var orig;
+        switch (choice.kbd) {
+            case 'Show full names':
+                await this.selectKbd(all, false);
+                break;
+            case 'Show non-keyboards':
+                await this.selectKbd(true, trim);
+                break;
+            default:
+                orig = `/dev/input/by-id/${devs[0][devs[1].indexOf(choice.kbd)]}`
+        }
+        this.kbdPath = orig;
+        await this.initKbd();
+    }
+    async initKbd() {
+        this.event = new Input(this.kbdPath);
+        this.kbd = new Input.Keyboard(this.event);
+        await new Promise(r => {
+            console.log(ch.cyan('Press the space bar on selected keyboard'));
+            this.kbd.on('keypress', ev => keys(ev.code) === 'KEY_SPACE' ? r() : null);
+        });
+        this.kbd.removeAllListeners();
+        console.log(ch.green('Keyboard confirmed!'));
+    }
+}
+
+export default BasicKbd;

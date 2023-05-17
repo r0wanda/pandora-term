@@ -8,18 +8,11 @@ import { writeFileSync as wf, readFileSync as rf, existsSync as ex, rmSync as rm
 import RPC from './RPC.mjs';
 
 class HTTP extends RPC {
-    config;
     files;
-    tips;
-    help;
 
     constructor() {
         super(RPC.getAppID());
         this.files = [];
-        this.configPath = path.join(this.dirname, 'config.json');
-        this.config = JSON.parse(rf(this.configPath));
-        this.tips = JSON.parse(rf(path.join(this.dirname, 'tips.json'))).tips;
-        this.help = rf(path.join(this.dirname, 'help.txt'), 'utf8');
     }
 
     isURL(url) {

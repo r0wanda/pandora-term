@@ -1288,6 +1288,11 @@ inherits@2, inherits@^2.0.3, inherits@^2.0.4, inherits@~2.0.1:
   resolved "https://registry.npmjs.org/inherits/-/inherits-2.0.4.tgz"
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
+input-event@^1.2.6:
+  version "1.2.6"
+  resolved "https://registry.yarnpkg.com/input-event/-/input-event-1.2.6.tgz#b9aeefcb3a1a65dee5d25477fc30b7f25edd304b"
+  integrity sha512-1aSLTWXfj/zCf65Tr2J0f4JpfcprpjW/UOLf4lQ5G5fsOZwBAGWTJNXcsEJV/0s/w1vgsslvH3bnihI4ZtmC9Q==
+
 inquirer@^9.1.5:
   version "9.1.5"
   resolved "https://registry.yarnpkg.com/inquirer/-/inquirer-9.1.5.tgz#2aa48cd3ab76b2d759c86756023dfb107cbb7d45"
@@ -1428,6 +1433,11 @@ json-buffer@3.0.1:
   resolved "https://registry.npmjs.org/json-buffer/-/json-buffer-3.0.1.tgz"
   integrity sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==
 
+json-format@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/json-format/-/json-format-1.0.1.tgz#143f67e62af129d6bffed288a46265ea23d0df0c"
+  integrity sha512-MoKIg/lBeQALqjYnqEanikfo3zBKRwclpXJexdF0FUniYAAN2ypEIXBEtpQb+9BkLFtDK1fyTLAsnGlyGfLGxw==
+
 json-parse-even-better-errors@^2.3.0:
   version "2.3.1"
   resolved "https://registry.npmjs.org/json-parse-even-better-errors/-/json-parse-even-better-errors-2.3.1.tgz"
@@ -1489,6 +1499,11 @@ lines-and-columns@^1.1.6:
   version "1.2.4"
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
+
+linux-keycodes@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/linux-keycodes/-/linux-keycodes-1.0.0.tgz#df097ac73282b92a130a35d0dfc963ce4435cc7b"
+  integrity sha512-caPkNAgw5VSzlG1L3LdFwDSNbf8UDbkLmWwsccVliwfQVnB//yWU2qIHMSwfTcG0j0Jhe+V6XF3xObmcoyqWsg==
 
 load-bmfont@^1.4.1:
   version "1.4.1"

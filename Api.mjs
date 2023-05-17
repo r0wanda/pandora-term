@@ -157,6 +157,7 @@ class Api extends HTTP {
 	 * @returns {Promise<void>}
 	 */
 	async init() {
+		await super.init();
 		// Login
 		this.browse = await pptr.launch({
 			headless: false,

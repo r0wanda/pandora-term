@@ -1,46 +1,22 @@
 import ch from 'chalk';
 import inq from 'inquirer';
 import open from 'open-editor';
-import { readFileSync as rf, writeFileSync as wf, existsSync as ex, unlinkSync as df } from 'node:fs';
+import { readFileSync as rf } from 'node:fs';
 import Vim from './Vim.mjs';
+import Config from './Config.mjs';
 
-class ConfigEdit {
+class ConfigEdit extends Config {
     buf;
     config;
-    lockFile;
-    constructor(config = 'config.json', lockFile = '/tmp/config.pterm.lock') {
+    constructor(config = false, lockFile = '/tmp/config-edit.pterm.lock') {
+        super(lockFile);
         console.log(ch.green('Opening config editor'));
-        this.config = config;
-        this.lockFile = lockFile;
+        this.config = config ? config : this.configPath;
     }
     async run() {
         await this.lock();
         this.initBuf();
         await this.initProg();
-    }
-    async lock() {
-        if (ex(this.lockFile) && rf(this.lockFile, 'utf8') !== process.pid.toString()) {
-            console.log(ch.red('Lockfile in use by other program'));
-            console.log(ch.cyan('You may proceed if you\'re certain there are no other instances of the config editor running.'));
-            console.log(ch.cyan('If there are other instances it may result in ') + ch.red('data loss.'));
-            const ow = await inq.prompt([
-                {
-                    type: 'confirm',
-                    name: 'configconfirm',
-                    message: 'Overwrite lockfile?',
-                    default: false
-                }
-            ]);
-            if (!ow.configconfirm) {
-                console.log(ch.red('Close all other instances before running again'));
-                process.exit(1);
-            }
-        }
-        wf(this.lockFile, process.pid.toString());
-        console.log(ch.cyan(`Lockfile enabled at ${this.lockFile}`));
-    }
-    unlock() {
-        df(this.lockFile);
     }
     initBuf() {
         this.buf = JSON.parse(rf(this.config, 'utf8'));
@@ -53,8 +29,8 @@ class ConfigEdit {
                 name: 'editor',
                 message: 'Choose editor',
                 choices: [
-                    'Default',
-                    'Vim'
+                    'Vim',
+                    'Default'
                 ]
             }
         ]);

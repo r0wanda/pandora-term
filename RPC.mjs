@@ -1,4 +1,3 @@
-import url from 'node:url';
 import path from 'node:path';
 import { PythonShell } from 'python-shell';
 import Keybind from './Keybind.mjs';
@@ -7,10 +6,8 @@ class RPC extends Keybind {
     appID;
     scopes;
     py;
-    dirname;
     constructor(appid) {
         super();
-        this.dirname = path.dirname(url.fileURLToPath(import.meta.url));
         this.appID = appid;
     }
 
