@@ -18,7 +18,6 @@
     "figlet": "^1.5.2",
     "file-type": "^18.2.1",
     "find-process": "^1.4.7",
-    "gkm-class": "^1.1.0",
     "got": "^12.5.3",
     "has-flag": "^5.0.1",
     "input-event": "^1.2.6",
@@ -38,6 +37,7 @@
     "random-item": "^4.0.1",
     "rgb2hex": "^0.2.5",
     "rimraf": "^4.4.1",
+    "sleep": "^6.3.0",
     "supports-sixel": "^1.0.0",
     "word-wrap": "^1.2.3",
     "xvfb": "^0.4.0"

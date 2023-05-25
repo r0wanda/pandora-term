@@ -6,7 +6,6 @@
 - Add transparency
 - Add default + user config (in ~/.config/pandora-term)
 - Add ANSI image support (started in Img.mjs)
-- Replace the GKM dependency (reason: unsupported/unmaintained + unnecessary java dependency)
 - Finish notification system (fix glitchiness)
 - Finish Discord RPC system
 - Add options to the cli
@@ -14,3 +13,4 @@
 
 ## Finished
 - Add session close counter and exit if it exceeds a certain amount
+- Replace the GKM dependency (reason: unsupported/unmaintained + unnecessary java dependency)

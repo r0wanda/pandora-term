@@ -10,3 +10,9 @@ Options:
 
     --fix
         Fix some problems by removing the user data directory and resetting the configuration.
+    
+    --config
+        Open a conmfiguration editor
+    
+    --reset-kbd
+        Reset the keyboard configuration

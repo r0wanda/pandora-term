@@ -57,10 +57,17 @@ class BasicKbd extends Config {
         this.kbd = new Input.Keyboard(this.event);
         await new Promise(r => {
             console.log(ch.cyan('Press the space bar on selected keyboard'));
-            this.kbd.on('keypress', ev => keys(ev.code) === 'KEY_SPACE' ? r() : null);
+            function handle(ev) {
+                const key = keys(ev.code);
+                if (key === 'KEY_SPACE') r();
+            }
+            this.kbd.on('keypress', handle);
+            this.kbd.on('keydown', handle);
         });
         this.kbd.removeAllListeners();
         console.log(ch.green('Keyboard confirmed!'));
+        await this.edit('kbd', this.kbdPath);
+        console.log(ch.cyan('Keyboard saved, change by tunning with --reset-kbd'));
     }
 }
 

@@ -25,6 +25,7 @@ class Config extends Lock {
         this.reset();
         this.config[key] = val;
         wf(this.configPath, format(this.config));
+        this.reset();
         this.unlock();
     }
 }

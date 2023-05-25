@@ -64,6 +64,10 @@ class TuiApi extends Api {
 		} else if (hasFlag('--config', this.args)) {
 			const conf = new ConfigEdit();
 			await conf.run(this.configPath);
+			return false;
+		} else if (hasFlag('--reset-kbd', this.args)) {
+			await this.selectKbd();
+			return true;
 		} else {
 			return true;
 		}

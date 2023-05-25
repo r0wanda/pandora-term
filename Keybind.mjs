@@ -8,7 +8,6 @@ import BasicKbd from './BasicKbd.mjs';
  */
 class Keybind extends BasicKbd {
 	int;
-	config;
 
 	constructor() {
 		super();
@@ -34,6 +33,7 @@ class Keybind extends BasicKbd {
 				}
 			});
 			this.kbd.on('keyup', ev => {
+				const data = keys(ev.code);
 				if (pressed.includes(data)) {
 					pressed.splice(pressed.indexOf(data));
 				}

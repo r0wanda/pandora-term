@@ -1,36 +1,37 @@
 {
-    "system": {
-        "_comment": "Disabling any of these could break the program.",
-        "autoAccept": {
-            "cookies": true,
-            "violation": true
-        },
-        "closeCounter": true,
-        "screenshot": true
-    },
-    "keybinds": {
-        "_comment": "The key(s) to use for the keybind. Order does not matter, Left / Right versions of keys can be specified (eg. `Left Control`)",
-        "_exclude_comment": "If the keybind interferes with other apps, choose keys to exclude (the below example will respond to Pause, but not Meta+Pause)",
-        "play_pause": ["Pause"],
-        "play_pause_exclude": ["Meta"]
-    },
-    "tui": {
-        "alt_icons": false,
-        "transparent": true
-    },
-
-    "_screenshot_path_comment": "Changing this to /tmp/scr.png is ideal, but can also break things",
-    "screenshot_path": "scr.png",
-
-    "_timeout_idleTime_comment": "5000 is reccomended (2000 for idleTime), add to both in increments of 1000 until the `Login failed` error stops.",
-    "timeout": 8000,
-    "idleTime": 3000,
-
-    "_collection_timeout_comment": "Timeout for waiting for collection. 30000 (30 seconds) is default, you can change it to a larger value or to 0 for no timeout.",
-    "collection_timeout": 30000,
-
-    "w3m": "/usr/lib/w3m/w3mimgdisplay",
-    "tmp": "./tmp",
-    "logfile": "errfile",
-    "tips": true
+	"system": {
+		"_comment": "Disabling any of these could break the program.",
+		"autoAccept": {
+			"cookies": true,
+			"violation": true
+		},
+		"closeCounter": true,
+		"screenshot": true
+	},
+	"keybinds": {
+		"_comment": "The key(s) to use for the keybind. Order does not matter, Left / Right versions of keys can be specified (eg. `Left Control`)",
+		"_exclude_comment": "If the keybind interferes with other apps, choose keys to exclude (the below example will respond to Pause, but not Meta+Pause)",
+		"play_pause": [
+			"Pause"
+		],
+		"play_pause_exclude": [
+			"Meta"
+		]
+	},
+	"tui": {
+		"alt_icons": false,
+		"transparent": true
+	},
+	"_screenshot_path_comment": "Changing this to /tmp/scr.png is ideal, but can also break things",
+	"screenshot_path": "scr.png",
+	"_timeout_idleTime_comment": "5000 is reccomended (2000 for idleTime), add to both in increments of 1000 until the `Login failed` error stops.",
+	"timeout": 8000,
+	"idleTime": 3000,
+	"_collection_timeout_comment": "Timeout for waiting for collection. 30000 (30 seconds) is default, you can change it to a larger value or to 0 for no timeout.",
+	"collection_timeout": 30000,
+	"w3m": "/usr/lib/w3m/w3mimgdisplay",
+	"tmp": "./tmp",
+	"logfile": "errfile",
+	"tips": true,
+	"kbd": "/dev/input/by-id/usb-Razer_Razer_BlackWidow_V3-if01-event-kbd"
 }
