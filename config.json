@@ -12,11 +12,9 @@
 		"_comment": "The key(s) to use for the keybind. Order does not matter, Left / Right versions of keys can be specified (eg. `Left Control`)",
 		"_exclude_comment": "If the keybind interferes with other apps, choose keys to exclude (the below example will respond to Pause, but not Meta+Pause)",
 		"play_pause": [
-			"Pause"
+			"KEY_PAUSE"
 		],
-		"play_pause_exclude": [
-			"Meta"
-		]
+		"play_pause_exclude": []
 	},
 	"tui": {
 		"alt_icons": false,
@@ -33,5 +31,5 @@
 	"tmp": "./tmp",
 	"logfile": "errfile",
 	"tips": true,
-	"kbd": "/dev/input/by-id/usb-Razer_Razer_BlackWidow_V3-if01-event-kbd"
+	"kbd": "/dev/input/by-id/usb-Razer_Razer_BlackWidow_V3-event-kbd"
 }

@@ -38,6 +38,7 @@ class Keybind extends BasicKbd {
 					pressed.splice(pressed.indexOf(data));
 				}
 			});
+			console.error(pressed);
 			this.int = setInterval(handler, 50, pressed);
 			if (this.notifs) this.notifs.info('Keybind', 'Global keybinds initialized');
 		} catch (err) {

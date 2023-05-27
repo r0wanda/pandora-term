@@ -14,7 +14,13 @@ class BasicKbd extends Config {
         this.kbdPath = false;
     }
     async init() {
-        if (!this.config.kbd) await this.selectKbd();
+        if (!this.config.kbd) {
+            await this.selectKbd();
+        } else {
+            this.kbdPath = this.config.kbd;
+            this.event = new Input(this.kbdPath);
+            this.kbd = new Input.Keyboard(this.event);
+        }
     }
     listDevs(all, trim) {
         var oDevs = rds('/dev/input/by-id');
@@ -59,6 +65,7 @@ class BasicKbd extends Config {
             console.log(ch.cyan('Press the space bar on selected keyboard'));
             function handle(ev) {
                 const key = keys(ev.code);
+                console.log(key);
                 if (key === 'KEY_SPACE') r();
             }
             this.kbd.on('keypress', handle);

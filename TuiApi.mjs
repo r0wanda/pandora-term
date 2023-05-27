@@ -96,7 +96,9 @@ class TuiApi extends Api {
 			await this.drawPlayPause();
 			this.boxes.songPage.style.fg = colors.fg;
 			this.boxes.duration.left = `100%-${duration.length}`;
-			this.boxes.collection.style.border.fg = colors.bg;
+			try {
+				this.boxes.collection.style.border.fg = colors.bg;
+			} catch {};
 			for (var key of ['song', 'duration', 'play', 'skip']) {
 				try {
 					this.boxes[key].style.bg = colors.bg;
@@ -124,7 +126,8 @@ class TuiApi extends Api {
 		if (!arg) process.exit(0);
 		await super.init();
 		this.scr = bl.screen({
-			smartCSR: true
+			smartCSR: true,
+			fullUnicode: true
 		});
 		this.scr.enableInput();
 		this.loops.song = setInterval(this.#songLoop.bind(this), 500);
@@ -144,9 +147,9 @@ class TuiApi extends Api {
 		this.boxes.song.focus();
 		this.scr.render();
 		this.notifs = new Notifications(this.scr, true);
+		await this.initKeybind.bind(this)(this.keyHandler.bind(this));
 		if (this.config.tips) this.notifs.info('Tip', randItem(this.tips));
 		await this.drawCollection();
-		this.initKeybind.bind(this)(this.keyHandler.bind(this));
 	}
 	initButtons() {
 		this.boxes.play.on('click', async () => {
@@ -167,7 +170,7 @@ class TuiApi extends Api {
 		return str.replace(/{/g, '\{').replace(/}/g, '\}');
 	}
 
-	// Draw functions (exlcuding loops)
+	// Draw functions (excluding loops)
 	async drawCollection() {
 		await this.fetchCollection();
 		if (!this.mymusic) {
@@ -191,7 +194,7 @@ class TuiApi extends Api {
 					top: 0,
 					width: item.first.content.length,
 					height: 1,
-					content: this.sanitizeContent(item.first.content)
+					content: item.first.content
 				}));
 			}
 			if (item.second.content !== '') {
@@ -199,7 +202,7 @@ class TuiApi extends Api {
 					top: 1,
 					width: item.second.content.length,
 					height: 1,
-					content: this.sanitizeContent(item.second.content)
+					content: item.second.content
 				}));
 			}
 			if (item.third.exists) {
@@ -209,7 +212,7 @@ class TuiApi extends Api {
 				var bound;
 				textBoxes.push(bl.box({
 					top: 2,
-					width: item.third.content.length,
+					width: content.length,
 					height: 1,
 					content,
 					tags: true
@@ -321,10 +324,9 @@ class TuiApi extends Api {
 	}
 	async loadButtons() {
 		const buttons = await this.getButtons();
-		console.error(buttons);
 		if (buttons.skip) this.boxes.skip = bl.button({
 			top: '100%-1',
-			left: 'center+2',
+			left: '50%+3',
 			width: 1,
 			height: 1,
 			content: S.ICONS.SKIP,
