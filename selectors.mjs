@@ -53,13 +53,8 @@ export const MYMUSIC = {
 }
 export const PLACEHOLDER = 'https://via.placeholder.com/500x500.png?text=?';
 export const MUTE = ['--mute-audio'];
-export const ARGS = ['--app=https://pandora.com/account/sign-in', '--autoplay-policy=no-user-gesture-required', '--no-sandbox'];
-export const XVFB = xvfb => [`--display=${xvfb._display}`];
-export const XVFB_OPTS = {
-	displayNum: 99,
-	reuse: true,
-	xvfb_args: ['-ac'],
-}
+export const APP = ['--app=https://pandora.com/account/sign-in'];
+export const ARGS = ['--autoplay-policy=no-user-gesture-required', '--no-sandbox'];
 export const ICONS = {
 	PLAY: '▶',
 	PAUSE: '⏸',

@@ -1,3 +1,4 @@
+import ch from 'chalk';
 import { execSync as exec } from 'node:child_process';
 import Screen from './Screen.mjs';
 
@@ -81,7 +82,7 @@ class XWininfo extends Screen {
      * @param {boolean|string[]} args 
      * @returns {string}
      */
-    execXWin(id, args = false) {
+    execXWin(id = false, args = false) {
         args = Array.isArray(args) ? args.join(' ') : typeof args === 'string' ? args : `-id ${id.toString()}`;
         const out = exec(`xwininfo ${args}`);
         return out.toString('utf8');
@@ -97,6 +98,7 @@ class XWininfo extends Screen {
         }
     }
     getXWin(toLC = false, id = this.id) {
+        console.log(ch.cyan('Loading X info'));
         return this.parseXWin(this.execXWin(id), toLC);
     }
 }

@@ -1,28 +1,20 @@
 import ch from 'chalk';
-import Xvfb from 'xvfb';
 import path from 'node:path';
 import rgb2hex from 'rgb2hex';
 import invert from 'invert-color';
 import { decodeHTML } from 'entities';
 import stealthPlugin from 'puppeteer-extra-plugin-stealth';
-import adblockerPlugin from 'puppeteer-extra-plugin-adblocker';
-import _pptr from 'puppeteer';
-import pptr from 'puppeteer-extra';
+import { chromium as pptr } from 'playwright-extra';
 import * as S from './selectors.mjs';
-import HTTP from './HTTP.mjs';
+import Xdo from './Xdo.mjs';
 
 pptr.use(stealthPlugin());
-const adblocker = adblockerPlugin({
-	blockTrackers: true,
-});
-pptr.use(adblocker);
 
-class Api extends HTTP {
+class Api extends Xdo {
 	// Vars
 	browse;
 	page;
 	udd;
-	xvfb;
 	error;
 	keybinds;
 	loaded;
@@ -36,10 +28,8 @@ class Api extends HTTP {
 			playPause: false,
 		};
 		this.udd = path.join(this.dirname, 'data');
-		this.xvfb = new Xvfb(S.XVFB_OPTS);
 		this.loaded = false;
 		this.error = false;
-		this.executablePath = _pptr.executablePath();
 		this.#closeCount = 0;
 		this.#loopsSinceClose = 0;
 		this.#prevCloseCount = 0;
@@ -95,6 +85,7 @@ class Api extends HTTP {
 	 * @returns {Promise<void>}
 	 */
 	async close() {
+		setTimeout(process.exit, 15000, 1);
 		await super.close();
 		if (this.browse && this.browse.isConnected) {
 			await this.browse.close();
@@ -116,22 +107,22 @@ class Api extends HTTP {
 			await page.evaluate(S => {
 				var clicked = false;
 				setInterval(() => {
-					const cookieBtn = document.querySelector(S.COOKIES);
+					const cookieBtn = document.querySelector(S);
 					if (!clicked && cookieBtn) {
 						clicked = true;
 						cookieBtn.click();
 					}
 				}, 500);
-			}, S);
+			}, S.COOKIES);
 		}
 
 		if (this.config.system.autoAccept.violation) {
 			await page.evaluate(S => {
 				setInterval(() => {
-					const violation = document.querySelector(S.VIOLATION);
+					const violation = document.querySelector(S);
 					if (violation) violation.click();
 				}, 250);
-			}, S);
+			}, S.VIOLATION);
 		}
 	}
 
@@ -157,25 +148,26 @@ class Api extends HTTP {
 	 * @returns {Promise<void>}
 	 */
 	async init() {
+		try {
 		await super.init();
 		// Login
-		this.browse = await pptr.launch({
+		this.browse = await pptr.launchPersistentContext(this.udd, {
 			headless: false,
-			userDataDir: this.udd,
-			defaultViewport: null,
-			args: S.ARGS.concat(S.MUTE),
-			executablePath: this.executablePath
+			args: S.ARGS.concat(S.MUTE, S.APP)
 		});
 		console.log(ch.blue('Browser started, logging in...'));
 		const [page] = await this.browse.pages();
+		const xwin = this.parseXWin(this.execXWin(false, ['-root']), true);
+		console.error(xwin);
+		await page.setViewportSize({
+			width: xwin.width,
+			height: xwin.height
+		});
 		//await this.logPPTRConsole(page);
 		await this.autoAccept(page);
 		console.log(ch.blue('Autoaccept started'));
-		await page.waitForSelector(S.AVATAR, {
-			visible: true,
-			timeout: 0,
-		});
-		await page.waitForNetworkIdle();
+		await page.waitForSelector(S.AVATAR);
+		//await page.waitForLoadState('networkidle');
 		console.log(ch.blue('Page loaded'));
 		await page.evaluate(() => {
 			setTimeout(() => {
@@ -187,31 +179,50 @@ class Api extends HTTP {
 		console.log(ch.blue('Visual signin done'));
 
 		// Init
-		this.xvfb.startSync();
-		this.browse = await pptr.launch({
+		try {
+			this.startXvfb();
+		} catch (err) {
+			console.error(err);
+			await this.close();
+		}
+		this.browse = await pptr.launchPersistentContext(this.udd, {
 			headless: false,
-			userDataDir: this.udd,
-			defaultViewport: null,
 			ignoreDefaultArgs: S.MUTE,
-			args: S.ARGS.concat(S.XVFB(this.xvfb)),
-			executablePath: this.executablePath
+			args: S.ARGS.concat([`--display=:99`])
 		});
 		console.log(ch.blue('Browser started with XVFB') + '\n' + ch.green('Loading page...'));
-		this.page = (await this.browse.pages())[0];
+		this.page = await this.browse.newPage();
+		await this.page.setViewportSize({
+			width: xwin.width,
+			height: xwin.height
+		});
+		await this.page.goto('https://pandora.com/collection/');
 		//this.logPPTRConsole(this.page);
 		// await this.page.reload();
-		await this.page.waitForNetworkIdle({
-			idleTime: this.config.idleTime
-		});
-		if (this.config.system.screenshot) await this.page.screenshot({ path: this.config.screenshot_path });
+		await this.page.waitForLoadState('load');
+		try {
+			await this.page.waitForSelector(S.AVATAR, {
+				timeout: 15000
+			});
+		} catch (err) {
+			console.error(err);
+			if (this.config.system.screenshot) await this.page.screenshot({ path: this.config.screenshot_path, fullPage: true });
+			throw new Error(err);
+		}
+		if (this.config.system.screenshot) await this.page.screenshot({ path: this.config.screenshot_path, fullPage: true });
 		if (!(await this.page.$(S.AVATAR))) {
 			throw new Error('CRITICAL: Login failed, or cookies did not save/load!');
 		}
+		console.log(ch.green('Login successful'));
 		await this.autoAccept(this.page);
 		console.log(ch.blue('Autoaccept started'));
-		console.log(ch.green('Login successful'));
 		console.log(ch.green('Starting TUI'));
 		this.loaded = true;
+		} catch (err) {
+			console.log('Error');
+			console.error(err);
+			await this.close();
+		}
 	}
 
 	// Getters
@@ -464,12 +475,12 @@ class Api extends HTTP {
 					} // From: https://stackoverflow.com/a/12222317
 
 					const collection = [];
-					const infiniteGrid = document.querySelector(S.MYMUSIC.INFINITEGRID);
+					const infiniteGrid = document.querySelector(S.INFINITEGRID);
 					//throw new Error(cssPath(infiniteGrid.innerHTML));
 					for (const child of infiniteGrid.children) {
 						const res = {
-							img: S.PLACEHOLDER,
-							play: cssPath(child) + S.MYMUSIC.ITEM_PLAY,
+							img: 'placeholder',
+							play: cssPath(child) + S.ITEM_PLAY,
 							first: {
 								elem: '',
 								link: true,
@@ -489,11 +500,11 @@ class Api extends HTTP {
 								clean: false,
 							}
 						}
-						res.img = child.querySelector(S.MYMUSIC.ITEM_THUMBNAIL).src;
-						const first = child.querySelector(S.MYMUSIC.ITEM_FIRST);
+						res.img = child.querySelector(S.ITEM_THUMBNAIL).src;
+						const first = child.querySelector(S.ITEM_FIRST);
 						res.first.elem = cssPath(first);
 						res.first.content = first.innerText;
-						const second = child.querySelector(S.MYMUSIC.ITEM_SECOND);
+						const second = child.querySelector(S.ITEM_SECOND);
 						const secondLink = second.querySelector('a');
 						if (secondLink) {
 							res.second.link = true;
@@ -504,11 +515,11 @@ class Api extends HTTP {
 							res.second.elem = cssPath(second);
 						}
 
-						const third = child.querySelector(S.MYMUSIC.ITEM_THIRD);
+						const third = child.querySelector(S.ITEM_THIRD);
 						if (third) {
 							res.third.exists = true;
-							const third_txt = third.querySelector(S.MYMUSIC.ITEM_THIRD_TXT);
-							const third_e = third.querySelector(S.MYMUSIC.ITEM_THIRD_E);
+							const third_txt = third.querySelector(S.ITEM_THIRD_TXT);
+							const third_e = third.querySelector(S.ITEM_THIRD_E);
 							res.third.elem = cssPath(third);
 							res.third.content = third_txt.innerText;
 							if (third_e) {
@@ -528,7 +539,7 @@ class Api extends HTTP {
 				} catch {
 					return false;
 				}
-			}, S);
+			}, S.MYMUSIC);
 			return grid;
 		} catch (err) {
 			this.handleError(err, 'collection');
@@ -543,13 +554,18 @@ class Api extends HTTP {
 	async playCollectionItem(item) {
 		try {
 			console.error("item: " + item.play);
-			const elem = await this.page.$(item.play);
-			await elem.hover();
 			await this.page.screenshot({
-				path: './item.png'
+				path: './col.png'
 			});
-			await elem.click();
-			console.error(this.query2html(item.play));
+			await this.page.evaluate(play => {
+				document.querySelector(play.c).click();
+				document.querySelector(play.play).click();
+			}, { play: item.play, c: S.MYMUSIC.COLLECTION });
+			setTimeout(async () => {
+				await this.page.screenshot({
+					path: './item.png'
+				});
+			}, 2000);
 		} catch (err) {
 			this.handleError(err, 'playCollectionItem');
 		}

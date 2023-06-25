@@ -2,6 +2,7 @@
 
 ## Unfinished
 - Finish song page
+- Add alternate icons
 - Finish collection
 - Add transparency
 - Add default + user config (in ~/.config/pandora-term)

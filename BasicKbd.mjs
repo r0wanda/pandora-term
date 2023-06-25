@@ -3,9 +3,9 @@ import inq from 'inquirer';
 import Input from 'input-event';
 import { readdirSync as rds } from 'node:fs';
 import { fromCode as keys } from 'linux-keycodes';
-import Config from './Config.mjs';
+import XWininfo from './XWininfo.mjs';
 
-class BasicKbd extends Config {
+class BasicKbd extends XWininfo {
     kbd;
     kbdPath;
     constructor() {

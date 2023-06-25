@@ -16,3 +16,4 @@ cpp/ansi
 cpp/xkey
 .vscode
 .vscode/*
+yarn.lock

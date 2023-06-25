@@ -1,7 +1,10 @@
-class Screen {
+import Config from './Config.mjs';
+
+class Screen extends Config {
     cols;
     rows;
     constructor() {
+        super();
         this.cols = process.stdout.columns;
         this.rows = process.stdout.rows;
         this.pH = this.rows / 100;

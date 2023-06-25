@@ -69,10 +69,14 @@ class HTTP extends RPC {
             return path.join(this.dirname, 'placeholder.png');
         }
     }
-    async save(buf, cnvimg = true) {
-        const bytes = rb(32)
+    randBytes() {
+        const bytes = rb(16)
             .toString('base64url')
             .substring(0, 9);
+        return bytes;
+    }
+    async save(buf, cnvimg = true) {
+        const bytes = this.randBytes();
         const { mime, ext } = await ftfb(buf);
         const isImg = mime.includes('image');
         const isPng = isImg ? ext === 'png' : false;

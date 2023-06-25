@@ -179,6 +179,8 @@ class TuiApi extends Api {
 		}
 		console.error(this.mymusic);
 		this.boxes.collectionItems = [];
+		var top = 0;
+		var left = 0;
 		for (var item of this.mymusic) {
 			/*const imgtest = bl.image({
 				top: 10,
@@ -219,9 +221,10 @@ class TuiApi extends Api {
 				}));
 			}
 			var box = bl.box({
-				top: 0,
+				top,
+				left,
 				width: '20%',
-				height: 20,
+				height: 5,
 				border: {
 					type: 'line'
 				},
@@ -236,7 +239,11 @@ class TuiApi extends Api {
 				this.playCollectionItem(item);
 			});
 			this.boxes.collectionItems.push(box);
-			break;
+			left += this.wPer(20);
+			if (left + this.wPer(20) > process.stdout.columns) {
+				left = 0;
+				top += 5;
+			}
 		}
 		this.boxes.collection = bl.box({
 			top: 1,
@@ -251,6 +258,7 @@ class TuiApi extends Api {
 			},
 			width: '100%',
 			height: '100%-2',
+			scrollable: true,
 			children: this.boxes.collectionItems
 		});
 		this.scr.append(this.boxes.collection);
@@ -330,6 +338,28 @@ class TuiApi extends Api {
 			width: 1,
 			height: 1,
 			content: S.ICONS.SKIP,
+			style: {
+				bg: 'white',
+				fg: 'black'
+			}
+		});
+		if (buttons.rewind) this.boxes.rewind = bl.button({
+			top: '100%-1',
+			left: '50%-3',
+			width: 1,
+			height: 1,
+			content: S.ICONS.REWIND,
+			style: {
+				bg: 'white',
+				fg: 'black'
+			}
+		});
+		if (buttons.replay) this.boxes.replay = bl.button({
+			top: '100%-1',
+			left: '50%-3',
+			width: 1,
+			height: 1,
+			content: S.ICONS.REPLAY,
 			style: {
 				bg: 'white',
 				fg: 'black'
